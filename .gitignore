@@ -1,21 +1,6 @@
-# python
-.venv/
-__pycache__/
-*.pyc
-
-# 런타임 상태 (스캔 캐시/설정)
-data/
-
-# 설치된 플러그인 clone들
-plugins/*
-!plugins/.gitkeep
-
-# claude 심볼릭 링크 등록 지점
-.claude/plugins/
-
-# streamlit 설치 시 자동 생성되는 skill 링크 (.venv 내부를 가리킴)
-.agents/
-.claude/skills/
-
 # OS
 .DS_Store
+
+# python
+__pycache__/
+*.pyc
