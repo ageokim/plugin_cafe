@@ -16,7 +16,3 @@ plugins/*
 # 머신별 상태 (Architecture.md §8.7)
 .claude/settings.local.json
 .claude-plugin/marketplace.json
-
-# streamlit 설치 시 자동 생성되는 skill 링크 (site-packages를 가리킴)
-.agents/
-.claude/skills/

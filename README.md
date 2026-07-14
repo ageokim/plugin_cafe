@@ -21,10 +21,15 @@ plugin_market/
 ├─ plugins/             # 설치된 plugin clone — plugins/{org}/{name} (git 비추적)
 ├─ .claude/             # local claude 설정
 ├─ .claude-plugin/      # marketplace.json — pm이 생성·관리 (git 비추적)
-├─ data/                # config·orgs·plugins·credentials·env .json (git 비추적)
+├─ data/                # config·orgs·plugins·credentials·presets·env .json (git 비추적)
 ├─ tests/               # fake 주입 단위 테스트
 └─ docs/                # Architecture.md · Scenario.md · mockup/
 ```
+
+## 요구 사항
+
+- **Python ≥ 3.8** — venv 없이 `python -m`으로 실행 (§9)
+- 챗 탭의 `claude-agent-sdk`만 3.10+ 필요 — 3.8·3.9에서는 `claude` CLI subprocess 폴백으로 동작 (§12.3)
 
 ## 사용법 (구현 후)
 
