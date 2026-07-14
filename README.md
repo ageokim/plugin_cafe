@@ -2,9 +2,9 @@
 
 Claude Code에서 사용할 plugin을 여러 GitHub organization에서 검색·설치·활성화·관리하는 도구.
 
-> **현재 상태: 설계 완료, 뼈대(폴더 트리) 구성 단계.**
+> **현재 상태: 설계 완료, 구현 진행 중 (`feat/pm-core`).**
 > 전체 설계는 [docs/Architecture.md](docs/Architecture.md), 사용자 흐름은 [docs/Scenario.md](docs/Scenario.md),
-> 화면 목업은 [docs/mockup/](docs/mockup/) 참고.
+> 구현 순서·체크리스트는 [docs/Implementation.md](docs/Implementation.md), 화면 목업은 [docs/mockup/](docs/mockup/) 참고.
 
 ## 구조
 
