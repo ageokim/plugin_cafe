@@ -6,108 +6,162 @@
 <title>Plugin Market — 로그인 후 (목업)</title>
 <style>
   :root {
-    --bg:#0e1117; --panel:#1a1d24; --line:#2d3139;
-    --text:#e6e6e6; --muted:#9aa0a6; --primary:#1a73e8;
-    --green:#4ade80; --yellow:#fbbf24; --sbw:280px;
+    --bg:#0a0c10; --panel:#12151c; --glass:rgba(18,21,28,.72);
+    --line:#232833; --line2:#2e3442;
+    --text:#e7eaf0; --muted:#8b93a3; --dim:#5c6474;
+    --acc1:#6366f1; --acc2:#a855f7;
+    --grad:linear-gradient(135deg,var(--acc1),var(--acc2));
+    --green:#34d399; --amber:#fbbf24;
+    --sbw:288px; --r:14px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); overflow:hidden;
+  body { background:
+           radial-gradient(900px 400px at 85% -10%, rgba(168,85,247,.13), transparent),
+           radial-gradient(700px 400px at -10% 110%, rgba(99,102,241,.10), transparent),
+           var(--bg);
+         color:var(--text); overflow:hidden;
          font-family:-apple-system,"Segoe UI","Noto Sans KR",sans-serif; line-height:1.5; }
+  .ic { width:16px; height:16px; stroke:currentColor; stroke-width:2;
+        fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none; }
 
-  .mock-banner { background:#3d360f; color:#fbbf24; text-align:center; font-size:.78rem; padding:5px; }
+  .mock-banner { background:rgba(251,191,36,.08); color:#d4a52a; text-align:center;
+                 font-size:.74rem; padding:5px; border-bottom:1px solid rgba(251,191,36,.15); }
 
-  header { display:flex; align-items:center; gap:14px; padding:10px 20px;
-           background:rgba(14,17,23,.95); border-bottom:1px solid var(--line); }
-  header .logo { font-weight:800; }
-  header .logo span { color:var(--primary); }
-  header .conn { color:var(--muted); font-size:.8rem; }
-  header .conn b { color:var(--text); }
-  .btn { display:inline-block; background:var(--panel); border:1px solid var(--line);
-         color:var(--text); padding:5px 12px; border-radius:8px; font-size:.8rem;
-         text-decoration:none; cursor:pointer; }
-  .btn.primary { background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; }
-  .btn.small { padding:2px 9px; font-size:.72rem; }
+  /* ── 헤더 ──────────────────────────────────────────── */
+  header { display:flex; align-items:center; gap:14px; padding:10px 18px;
+           background:var(--glass); backdrop-filter:blur(14px);
+           border-bottom:1px solid var(--line); }
+  .logo { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.02em; }
+  .logo .mark { width:28px; height:28px; border-radius:9px; background:var(--grad);
+                display:flex; align-items:center; justify-content:center;
+                box-shadow:0 4px 14px rgba(124,93,250,.4); }
+  .logo .mark .ic { width:15px; height:15px; color:#fff; }
+  .conn { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:.78rem;
+          background:rgba(255,255,255,.03); border:1px solid var(--line);
+          border-radius:999px; padding:4px 12px; }
+  .conn b { color:var(--text); font-weight:600; }
+  .conn .dot { width:7px; height:7px; border-radius:50%; background:var(--green);
+               box-shadow:0 0 8px var(--green); }
+  .btn { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.04);
+         border:1px solid var(--line2); color:var(--text); padding:6px 13px;
+         border-radius:999px; font-size:.78rem; text-decoration:none; cursor:pointer;
+         transition:all .15s; }
+  .btn:hover { background:rgba(255,255,255,.08); border-color:#3a4152; }
+  .btn.primary { background:var(--grad); border:none; color:#fff; font-weight:600;
+                 box-shadow:0 4px 14px rgba(124,93,250,.35); }
+  .btn.ghost { border:none; background:transparent; color:var(--muted); padding:5px 8px; }
+  .btn.ghost:hover { color:var(--text); background:rgba(255,255,255,.06); }
+  .btn.sm { padding:3px 10px; font-size:.7rem; }
   header .logout { margin-left:auto; }
 
-  /* ── 레이아웃: 사이드바 + 메인 ─────────────────────────── */
-  .app { display:flex; height:calc(100vh - 76px); position:relative; }
+  /* ── 레이아웃 ──────────────────────────────────────── */
+  .app { display:flex; height:calc(100vh - 74px); position:relative; }
 
   /* 사이드바 */
-  .sidebar { width:var(--sbw); min-width:var(--sbw); background:var(--panel);
-             border-right:1px solid var(--line); display:flex; flex-direction:column;
-             transition:transform .22s ease; z-index:20; }
-  .sb-head { display:flex; align-items:center; gap:8px; padding:10px 12px;
+  .sidebar { width:var(--sbw); min-width:var(--sbw); background:var(--glass);
+             backdrop-filter:blur(14px); border-right:1px solid var(--line);
+             display:flex; flex-direction:column; transition:transform .24s cubic-bezier(.4,0,.2,1);
+             z-index:20; }
+  .sb-head { display:flex; align-items:center; gap:8px; padding:12px 14px;
              border-bottom:1px solid var(--line); }
-  .sb-head h3 { font-size:.88rem; margin-right:auto; }
-  #pinBtn { cursor:pointer; border:1px solid var(--line); border-radius:6px;
-            padding:2px 8px; font-size:.78rem; background:var(--bg); }
-  #pinBtn.on { background:var(--primary); border-color:var(--primary); }
+  .sb-head h3 { display:flex; align-items:center; gap:8px; font-size:.85rem;
+                margin-right:auto; letter-spacing:-.01em; }
+  .sb-head h3 .ic { color:var(--acc2); }
+  #pinBtn { display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+            border:1px solid var(--line2); border-radius:999px; padding:3px 10px;
+            font-size:.7rem; color:var(--muted); background:transparent; transition:all .15s; }
+  #pinBtn.on { background:var(--grad); border-color:transparent; color:#fff; }
 
-  /* 미고정: 사이드바가 겹침(overlay) 모드로 전환, 평소엔 왼쪽으로 숨음 */
   .app.unpinned .sidebar { position:absolute; top:0; bottom:0; left:0;
                            transform:translateX(calc(-1 * var(--sbw)));
-                           box-shadow:8px 0 24px rgba(0,0,0,.45); }
+                           box-shadow:16px 0 40px rgba(0,0,0,.55); }
   .app.unpinned .sidebar.open { transform:translateX(0); }
-  /* 미고정일 때 왼쪽 가장자리 감지 레일 */
-  .rail { display:none; position:absolute; top:0; bottom:0; left:0; width:16px;
-          z-index:19; background:linear-gradient(90deg, rgba(26,115,232,.25), transparent);
-          align-items:center; justify-content:center; color:var(--muted); font-size:.7rem;
-          cursor:pointer; }
+  .rail { display:none; position:absolute; top:0; bottom:0; left:0; width:18px; z-index:19;
+          background:linear-gradient(90deg, rgba(124,93,250,.22), transparent);
+          align-items:center; justify-content:center; color:var(--dim); cursor:pointer; }
+  .rail .ic { width:13px; height:13px; }
   .app.unpinned .rail { display:flex; }
 
   .sb-body { overflow-y:auto; flex:1; }
-  .sb-sec { padding:10px 12px; border-bottom:1px solid var(--line); }
-  .sb-sec .t { font-size:.72rem; color:var(--muted); margin-bottom:6px; }
+  .sb-sec { padding:12px 14px; border-bottom:1px solid var(--line); }
+  .sb-sec .t { display:flex; align-items:center; gap:6px; font-size:.7rem;
+               color:var(--muted); margin-bottom:8px; letter-spacing:.02em; }
   .orgadd { display:flex; gap:6px; }
-  .orgadd input { flex:1; min-width:0; background:#0b0e12; border:1px solid var(--line);
-                  border-radius:7px; padding:6px 9px; color:var(--text); font-size:.76rem; }
-  .search { width:100%; background:#0b0e12; border:1px solid var(--line); border-radius:7px;
-            padding:6px 9px; color:var(--text); font-size:.78rem; margin-bottom:6px; }
+  input { background:rgba(0,0,0,.35); border:1px solid var(--line2); border-radius:10px;
+          padding:7px 11px; color:var(--text); font-size:.76rem; outline:none;
+          transition:border-color .15s; }
+  input:focus { border-color:var(--acc1); }
+  .orgadd input { flex:1; min-width:0; }
+  .addbtn { width:30px; height:30px; border-radius:10px; background:var(--grad); border:none;
+            color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .search-row { position:relative; margin-bottom:8px; }
+  .search-row .ic { position:absolute; left:10px; top:8px; width:14px; height:14px; color:var(--dim); }
+  .search-row input { width:100%; padding-left:30px; }
   .chips { display:flex; gap:5px; flex-wrap:wrap; }
-  .chip { border:1px solid var(--line); border-radius:999px; padding:1px 8px;
-          font-size:.68rem; color:var(--muted); cursor:pointer; }
-  .chip.on { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .chip { border:1px solid var(--line2); border-radius:999px; padding:2px 10px;
+          font-size:.66rem; color:var(--muted); cursor:pointer; display:inline-flex;
+          align-items:center; gap:5px; transition:all .15s; }
+  .chip .d { width:6px; height:6px; border-radius:50%; }
+  .chip.on { background:rgba(124,93,250,.16); border-color:var(--acc1); color:var(--text); }
 
-  .org { border-bottom:1px solid var(--line); }
-  .org-h { display:flex; align-items:center; gap:6px; padding:8px 12px;
-           font-size:.8rem; font-weight:700; background:#171a20; }
-  .org-h .n { color:var(--muted); font-weight:400; font-size:.72rem; }
-  .org-h .sp { margin-left:auto; display:flex; gap:4px; }
-  .plugin { display:flex; align-items:center; gap:6px; padding:8px 12px 8px 18px;
-            border-top:1px solid #22262e; }
-  .plugin .nm { font-size:.8rem; font-weight:600; }
-  .plugin .desc { color:var(--muted); font-size:.68rem; flex:1;
+  .org-h { display:flex; align-items:center; gap:7px; padding:9px 14px;
+           font-size:.78rem; font-weight:700; background:rgba(255,255,255,.02);
+           border-bottom:1px solid var(--line); }
+  .org-h .ic { width:13px; height:13px; color:var(--dim); }
+  .org-h .n { color:var(--dim); font-weight:500; font-size:.68rem; }
+  .org-h .sp { margin-left:auto; display:flex; }
+  .plugin { display:flex; align-items:center; gap:8px; padding:9px 14px 9px 20px;
+            border-bottom:1px solid var(--line); transition:background .12s; }
+  .plugin:hover { background:rgba(255,255,255,.025); }
+  .plugin .nm { font-size:.78rem; font-weight:600; }
+  .plugin .desc { color:var(--dim); font-size:.66rem; flex:1;
                   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .badge { border-radius:999px; padding:1px 7px; font-size:.64rem; font-weight:700; white-space:nowrap; }
-  .badge.on  { background:#0f3d2e; color:var(--green); }
-  .badge.off { background:#3d360f; color:var(--yellow); }
-  .badge.no  { background:#2d3139; color:var(--muted); }
-  details.inspect { padding:8px 12px; font-size:.74rem; color:var(--muted); }
+  .st { display:inline-flex; align-items:center; gap:5px; font-size:.64rem;
+        font-weight:600; white-space:nowrap; }
+  .st .d { width:7px; height:7px; border-radius:50%; }
+  .st.on  { color:var(--green); }  .st.on  .d { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .st.off { color:var(--amber); }  .st.off .d { background:var(--amber); }
+  .st.no  { color:var(--dim); }    .st.no  .d { background:var(--dim); }
+  details.inspect { padding:10px 14px; font-size:.72rem; color:var(--muted); }
+  details.inspect summary { display:flex; align-items:center; gap:6px; cursor:pointer; }
 
-  /* 메인: 챗(상) + 터미널(하) */
+  /* ── 메인: 탭 전환 (Claude ↔ 터미널) ────────────────── */
   .main { flex:1; display:flex; flex-direction:column; min-width:0; }
-  .panel-h { display:flex; align-items:center; gap:10px; padding:8px 14px;
-             border-bottom:1px solid var(--line); background:#12151b; }
-  .panel-h h3 { font-size:.85rem; margin-right:auto; }
-  .hint { font-size:.7rem; color:var(--muted); }
+  .main-h { display:flex; align-items:center; gap:12px; padding:9px 16px;
+            border-bottom:1px solid var(--line); background:var(--glass); backdrop-filter:blur(14px); }
+  .seg { display:flex; background:rgba(0,0,0,.35); border:1px solid var(--line2);
+         border-radius:999px; padding:3px; }
+  .seg button { display:inline-flex; align-items:center; gap:6px; border:none;
+                background:transparent; color:var(--muted); font-size:.78rem;
+                padding:5px 15px; border-radius:999px; cursor:pointer; transition:all .18s; }
+  .seg button.on { background:var(--grad); color:#fff; font-weight:600;
+                   box-shadow:0 2px 10px rgba(124,93,250,.35); }
+  .main-h .hint { font-size:.68rem; color:var(--dim); margin-left:auto; }
 
-  .chat { flex:1.1; display:flex; flex-direction:column; border-bottom:1px solid var(--line); min-height:0; }
-  .msgs { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
-  .msg { max-width:82%; padding:8px 13px; border-radius:12px; font-size:.82rem; }
-  .msg.user { align-self:flex-end; background:var(--primary); color:#fff; }
-  .msg.claude { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
-  .msg .skill { display:inline-block; background:#0f3d2e; color:var(--green);
-                border-radius:6px; padding:0 7px; font-size:.68rem; margin-bottom:3px; }
-  .chat-in { display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line); }
-  .chat-in input { flex:1; background:#0b0e12; border:1px solid var(--line);
-                   border-radius:8px; padding:8px 12px; color:var(--text); font-size:.82rem; }
+  .view { flex:1; display:none; flex-direction:column; min-height:0; }
+  .view.on { display:flex; }
 
-  .term-wrap { flex:1; display:flex; flex-direction:column; min-height:0; }
-  .term { flex:1; overflow-y:auto; background:#0b0e12; margin:10px 14px 14px;
-          border:1px solid var(--line); border-radius:10px; padding:12px;
+  /* Claude 챗 뷰 */
+  .msgs { flex:1; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:78%; padding:10px 15px; border-radius:16px; font-size:.82rem; }
+  .msg.user { align-self:flex-end; background:var(--grad); color:#fff;
+              border-bottom-right-radius:5px; }
+  .msg.claude { align-self:flex-start; background:var(--panel); border:1px solid var(--line);
+                border-bottom-left-radius:5px; }
+  .msg .skill { display:inline-flex; align-items:center; gap:5px; background:rgba(52,211,153,.1);
+                color:var(--green); border-radius:7px; padding:1px 8px; font-size:.66rem;
+                margin-bottom:4px; }
+  .chat-in { display:flex; gap:8px; padding:12px 18px; border-top:1px solid var(--line); }
+  .chat-in input { flex:1; padding:10px 14px; border-radius:12px; font-size:.82rem; }
+  .sendbtn { width:38px; height:38px; border-radius:12px; background:var(--grad); border:none;
+             color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+  /* 터미널 뷰 */
+  .term { flex:1; overflow-y:auto; background:#07090d; margin:14px 18px 18px;
+          border:1px solid var(--line); border-radius:var(--r); padding:14px;
           font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.76rem;
-          color:#d7dde5; white-space:pre-wrap; }
-  .term .p { color:#60a5fa; }
+          color:#cdd5e0; white-space:pre-wrap; box-shadow:inset 0 2px 12px rgba(0,0,0,.4); }
+  .term .p { color:#818cf8; }
   .term .g { color:var(--green); }
   .term .cursor { display:inline-block; width:7px; height:13px; background:var(--green);
                   animation:blink 1s step-end infinite; vertical-align:middle; }
@@ -116,105 +170,127 @@
 </head>
 <body>
 
-<div class="mock-banner">🎨 목업 — <b>📌 버튼</b>으로 사이드바 고정/미고정 전환 · 미고정일 때 <b>왼쪽 가장자리에 마우스</b>를 대보세요 · 로그아웃 → 로그인 화면</div>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.9 15.5a2 2 0 0 0-1.4-1.4L2.4 12.5a.5.5 0 0 1 0-1L8.5 9.9a2 2 0 0 0 1.4-1.4l1.6-6.1a.5.5 0 0 1 1 0l1.6 6.1a2 2 0 0 0 1.4 1.4l6.1 1.6a.5.5 0 0 1 0 1l-6.1 1.6a2 2 0 0 0-1.4 1.4l-1.6 6.1a.5.5 0 0 1-1 0z"/></symbol>
+  <symbol id="i-term" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><polyline points="21 3 21 8 16 8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 11V6a3 3 0 1 1 6 0v5l2 3H7z"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-act" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-org" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></symbol>
+</svg>
+
+<div class="mock-banner">목업 — <b>고정 버튼</b>으로 사이드바 전환 (미고정 시 왼쪽 가장자리 호버) · 상단 <b>Claude/터미널 탭</b>으로 화면 전환 · 로그아웃 → 로그인 화면</div>
 
 <header>
-  <div class="logo">🧩 Plugin <span>Market</span></div>
-  <div class="conn">서버: <b>github.xxx.xxx</b> · 로그인: <b>ageokim</b> (자동)</div>
-  <a class="btn logout" href="login.html">로그아웃</a>
+  <div class="logo"><span class="mark"><svg class="ic"><use href="#i-box"/></svg></span>Plugin Market</div>
+  <div class="conn"><span class="dot"></span>github.xxx.xxx · <b>ageokim</b> (자동 로그인)</div>
+  <a class="btn logout" href="login.html"><svg class="ic"><use href="#i-out"/></svg>로그아웃</a>
 </header>
 
 <div class="app" id="app">
 
-  <!-- 미고정일 때 왼쪽 가장자리 감지 레일 -->
-  <div class="rail" id="rail">»</div>
+  <div class="rail" id="rail"><svg class="ic"><use href="#i-chev"/></svg></div>
 
-  <!-- ◀ 사이드바: 플러그인 파트 -->
+  <!-- ◀ 사이드바: 플러그인 -->
   <aside class="sidebar" id="sb">
     <div class="sb-head">
-      <h3>📦 플러그인</h3>
-      <span id="pinBtn" class="on" title="사이드바 고정/미고정">📌 고정</span>
+      <h3><svg class="ic"><use href="#i-box"/></svg>플러그인</h3>
+      <button id="pinBtn" class="on"><svg class="ic" style="width:11px;height:11px"><use href="#i-pin"/></svg>고정</button>
     </div>
     <div class="sb-body">
 
       <div class="sb-sec">
-        <div class="t">🔗 organization 추가 (URL — 권한 있어야 등록됨)</div>
+        <div class="t"><svg class="ic" style="width:12px;height:12px"><use href="#i-link"/></svg>ORGANIZATION 추가 — 권한 있어야 등록됨</div>
         <div class="orgadd">
           <input placeholder="https://github.xxx.xxx/org-c">
-          <span class="btn small primary">＋</span>
+          <button class="addbtn"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
         </div>
       </div>
 
       <div class="sb-sec">
-        <input class="search" placeholder="🔎 플러그인 검색…">
+        <div class="search-row">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input placeholder="플러그인 검색…">
+        </div>
         <div class="chips">
-          <span class="chip on">전체 8</span><span class="chip">🟢 2</span>
-          <span class="chip">🟡 1</span><span class="chip">⚪ 5</span>
+          <span class="chip on">전체 8</span>
+          <span class="chip"><span class="d" style="background:var(--green)"></span>2</span>
+          <span class="chip"><span class="d" style="background:var(--amber)"></span>1</span>
+          <span class="chip"><span class="d" style="background:var(--dim)"></span>5</span>
         </div>
       </div>
 
-      <div class="org">
-        <div class="org-h">▼ org-a <span class="n">(3)</span>
-          <span class="sp"><span class="btn small">🔄</span><span class="btn small">✕</span></span>
-        </div>
-        <div class="plugin"><span class="nm">plugin-a</span><span class="desc">코드 리뷰 자동화</span>
-          <span class="badge on">🟢</span><span class="btn small">Off</span></div>
-        <div class="plugin"><span class="nm">plugin-b</span><span class="desc">API 클라이언트 생성</span>
-          <span class="badge off">🟡</span><span class="btn small">On</span></div>
-        <div class="plugin"><span class="nm">plugin-c</span><span class="desc">문서 템플릿</span>
-          <span class="badge no">⚪</span><span class="btn small primary">Install</span></div>
+      <div class="org-h"><svg class="ic"><use href="#i-org"/></svg>org-a <span class="n">3개</span>
+        <span class="sp"><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></span><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></span></span>
       </div>
+      <div class="plugin"><span class="nm">plugin-a</span><span class="desc">코드 리뷰 자동화</span>
+        <span class="st on"><span class="d"></span>Enabled</span><span class="btn ghost sm">끄기</span></div>
+      <div class="plugin"><span class="nm">plugin-b</span><span class="desc">API 클라이언트 생성</span>
+        <span class="st off"><span class="d"></span>Installed</span><span class="btn ghost sm">켜기</span></div>
+      <div class="plugin"><span class="nm">plugin-c</span><span class="desc">문서 템플릿</span>
+        <span class="st no"><span class="d"></span>Available</span>
+        <span class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</span></div>
 
-      <div class="org">
-        <div class="org-h">▼ org-b <span class="n">(5)</span>
-          <span class="sp"><span class="btn small">🔄</span><span class="btn small">✕</span></span>
-        </div>
-        <div class="plugin"><span class="nm">plugin-x</span><span class="desc">로그 분석 workflow</span>
-          <span class="badge on">🟢</span><span class="btn small">Off</span></div>
-        <div class="plugin"><span class="nm">plugin-y</span><span class="desc">보안 점검 skill</span>
-          <span class="badge no">⚪</span><span class="btn small primary">Install</span></div>
+      <div class="org-h"><svg class="ic"><use href="#i-org"/></svg>org-b <span class="n">5개</span>
+        <span class="sp"><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></span><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></span></span>
       </div>
+      <div class="plugin"><span class="nm">plugin-x</span><span class="desc">로그 분석 workflow</span>
+        <span class="st on"><span class="d"></span>Enabled</span><span class="btn ghost sm">끄기</span></div>
+      <div class="plugin"><span class="nm">plugin-y</span><span class="desc">보안 점검 skill</span>
+        <span class="st no"><span class="d"></span>Available</span>
+        <span class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</span></div>
 
-      <details class="inspect"><summary>🔍 Inspect — 상태 상세</summary>
-        org-a/plugin-a: clone ✅ 등록 ✅ 활성 ✅ · org-b/plugin-x: 업데이트 있음
+      <details class="inspect"><summary><svg class="ic" style="width:13px;height:13px"><use href="#i-act"/></svg>Inspect — 상태 상세</summary>
+        <div style="padding-top:8px">org-a/plugin-a: clone ✓ 등록 ✓ 활성 ✓ · org-b/plugin-x: 업데이트 있음</div>
       </details>
     </div>
   </aside>
 
-  <!-- ▶ 메인: claude 챗 (상) + 내장 터미널 (하) -->
+  <!-- ▶ 메인: 탭 전환 (Claude ↔ 터미널) -->
   <div class="main">
-
-    <div class="chat">
-      <div class="panel-h">
-        <h3>🤖 Claude 챗</h3>
-        <span class="hint">plugin-a 설치됨 — ➕ 새 대화부터 적용</span>
-        <span class="btn small primary">➕ 새 대화</span>
+    <div class="main-h">
+      <div class="seg">
+        <button id="tabChat" class="on" onclick="view('chat')">
+          <svg class="ic" style="width:13px;height:13px"><use href="#i-spark"/></svg>Claude</button>
+        <button id="tabTerm" onclick="view('term')">
+          <svg class="ic" style="width:13px;height:13px"><use href="#i-term"/></svg>터미널</button>
       </div>
+      <span class="btn sm primary" id="actionBtn"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg><span id="actionTxt">새 대화</span></span>
+      <span class="hint" id="hintTxt">plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market</span>
+    </div>
+
+    <!-- Claude 챗 뷰 -->
+    <div class="view on" id="view-chat">
       <div class="msgs">
         <div class="msg user">방금 받은 repo 코드리뷰 해줘</div>
         <div class="msg claude">
-          <span class="skill">▸ plugin-a : code-review skill</span><br>
+          <span class="skill"><svg class="ic" style="width:10px;height:10px"><use href="#i-spark"/></svg>plugin-a : code-review skill</span><br>
           3개 파일에서 2건의 이슈를 찾았습니다:<br>
           1. <b>auth.py:42</b> — 토큰 만료 검사 누락 …
         </div>
         <div class="msg user">1번 고쳐줘</div>
-        <div class="msg claude">auth.py:42에 만료 검사를 추가했습니다. 테스트 7건 통과 ✅</div>
+        <div class="msg claude">auth.py:42에 만료 검사를 추가했습니다. 테스트 7건 통과 ✓</div>
       </div>
       <div class="chat-in">
         <input placeholder="claude에게 메시지… (pm 명령도 입력 가능)">
-        <span class="btn primary">전송</span>
+        <button class="sendbtn"><svg class="ic"><use href="#i-send"/></svg></button>
       </div>
     </div>
 
-    <div class="term-wrap">
-      <div class="panel-h">
-        <h3>🖥️ 터미널</h3>
-        <span class="hint">진짜 셸 (cwd=plugin_market) — claude·pm 직접 실행</span>
-        <span class="btn small">새 터미널</span>
-      </div>
+    <!-- 터미널 뷰 -->
+    <div class="view" id="view-term">
       <div class="term"><span class="p">$</span> pm list
-<span class="g">org-a/</span>  plugin-a 🟢   plugin-b 🟡   plugin-c ⚪
-<span class="g">org-b/</span>  plugin-x 🟢   plugin-y ⚪
+<span class="g">org-a/</span>  plugin-a ●enabled   plugin-b ●installed   plugin-c ○
+<span class="g">org-b/</span>  plugin-x ●enabled   plugin-y ○
 <span class="p">$</span> claude          ← 완전한 대화형 claude (플러그인 적용)
 ╭──────────────────────────────╮
 │ ✻ Claude Code                │
@@ -225,12 +301,24 @@
 &gt; exit            ← claude 종료 → 셸 복귀
 <span class="p">$</span> <span class="cursor"></span></div>
     </div>
-
   </div>
 </div>
 
 <script>
-  // 사이드바 고정/미고정 — 목업이지만 실제로 동작
+  // ── 메인 탭 전환: Claude ↔ 터미널 ──
+  function view(v) {
+    const chat = v === "chat";
+    document.getElementById("view-chat").classList.toggle("on", chat);
+    document.getElementById("view-term").classList.toggle("on", !chat);
+    document.getElementById("tabChat").classList.toggle("on", chat);
+    document.getElementById("tabTerm").classList.toggle("on", !chat);
+    document.getElementById("actionTxt").textContent = chat ? "새 대화" : "새 터미널";
+    document.getElementById("hintTxt").textContent = chat
+      ? "plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market"
+      : "진짜 셸 — claude·pm 직접 실행 · exit 두 번이면 이 세션만 종료";
+  }
+
+  // ── 사이드바 고정/미고정 ──
   const app = document.getElementById("app");
   const sb  = document.getElementById("sb");
   const rail = document.getElementById("rail");
@@ -240,12 +328,10 @@
   pinBtn.addEventListener("click", () => {
     pinned = !pinned;
     pinBtn.classList.toggle("on", pinned);
-    pinBtn.textContent = pinned ? "📌 고정" : "📌 미고정";
+    pinBtn.lastChild.textContent = pinned ? "고정" : "미고정";
     app.classList.toggle("unpinned", !pinned);
     sb.classList.remove("open");
   });
-
-  // 미고정: 왼쪽 가장자리(레일) 호버 → 열림, 사이드바 벗어나면 300ms 후 닫힘
   rail.addEventListener("mouseenter", () => { clearTimeout(hideTimer); sb.classList.add("open"); });
   sb.addEventListener("mouseenter", () => clearTimeout(hideTimer));
   sb.addEventListener("mouseleave", () => {
