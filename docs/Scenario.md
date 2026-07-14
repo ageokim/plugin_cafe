@@ -79,6 +79,9 @@ flowchart LR
 
 **사용자가 하는 일:** ❌ 항목 옆의 명령을 복사 → 터미널에서 실행 → 재검사. 그게 전부다.
 
+> 단, python·라이브러리·포트처럼 **웹 화면 자체를 띄우는 데 필요한 항목**이 문제라면
+> 브라우저가 아니라 `run.sh`의 터미널 로그가 같은 안내를 한다 — 조치 후 `run.sh` 재실행.
+
 ---
 
 ## 시나리오 3 — 로그인 (ID / PWD 두 칸)
@@ -100,7 +103,7 @@ flowchart LR
 - **딱 두 칸**: ID + PWD(PAT — GitHub이 암호 인증을 폐지해 비밀번호 대신 토큰). org 주소는 여기가 아니라 **사이드바에서** 입력한다(시나리오 3.5) — 여러 org를 자유롭게 추가·제거하기 위함.
 - 로그인 성공 시 `data/credentials.json`에 **자동 저장** → 다음 실행부터 로그인 창 생략(시나리오 6).
 - 검증: 토큰이 유효한지 + 토큰 주인이 입력한 ID와 같은지. (org 권한은 org를 추가하는 순간 검사)
-- 최초 실행이라 GitHub 서버 주소를 아직 모르는 경우: 로그인 정보는 보관되고, **첫 org URL을 추가하는 순간** 서버가 정해지면서 한꺼번에 검증된다.
+- 최초 실행이라 GitHub 서버 주소를 아직 모르는 경우: 로그인 정보는 보관되고, **첫 org URL을 추가하는 순간** 서버가 정해지면서 한꺼번에 검증된다. 그때까지는 org 추가 외의 기능이 잠긴 "미검증" 상태이며, **검증이 끝나야 자동 저장도 이뤄진다**.
 
 ---
 
@@ -149,7 +152,7 @@ sequenceDiagram
     U->>SB: ③ plugin-x [Install] 클릭
     SB->>GH: git clone → plugins/org-b/plugin-x
     SB->>CL: marketplace 등록 + 활성화
-    SB-->>U: ④ 배지 ⚪ → 🟢 Enabled
+    SB-->>U: ④ 배지가 미설치 → 사용중으로 변경
 ```
 
 - 목록에는 검색창 + 상태 필터 칩(🟢/🟡/⚪) — 많아져도 페이지 넘김 없이 검색·스크롤.
@@ -163,6 +166,7 @@ sequenceDiagram
 
 ```
 [ ✦ Claude | ❯ 터미널 ]  [+ 새 대화]     ← 탭 클릭으로 전환
+                          (터미널 탭에선 버튼이 [+ 새 터미널]로 바뀜)
 ┌───────────────────────────────────┐
 │ (Claude 탭)  SDK 기반 대화          │
 │  > 코드리뷰 해줘                   │
@@ -222,7 +226,8 @@ sequenceDiagram
 
 - **켜기**: `./run.sh` 한 번 — 자동 로그인(저장된 credentials.json)으로 바로 메인.
 - **끄기**: 그냥 **브라우저 창을 닫으면 끝** — 서버가 스스로 감지하고 종료된다. 새로고침은 10초 유예 덕에 끊기지 않는다.
-- 토큰이 만료됐거나 org 권한을 잃었으면: 자동 로그인이 실패하고 로그인 창(값은 채워진 상태)으로 돌아온다 — **권한 확인은 매번 수행**되므로 우회는 없다.
+- **토큰이 만료·회수됐으면**: 자동 로그인이 실패하고 로그인 창(값은 채워진 상태)으로 돌아온다.
+- **특정 org의 권한만 잃었으면**: 로그인은 유지되고 그 org만 잠금 표시된다 — 어느 쪽이든 확인은 매번 수행되므로 우회는 없다.
 
 ---
 
@@ -230,24 +235,27 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    Available: ⚪ Available (org에 존재)
-    Installed: 🟡 Installed (내 PC에 있음, 꺼짐)
-    Enabled: 🟢 Enabled (claude가 사용 중)
+    Available: ⚪ 미설치 (org에 존재)
+    Installed: 🟡 꺼짐 (내 PC에 있음)
+    Enabled: 🟢 사용중 (claude가 사용)
 
-    Available --> Enabled : Install 클릭
-    Enabled --> Installed : Disable 클릭
-    Installed --> Enabled : Enable 클릭
-    Installed --> Available : Uninstall 클릭
-    Enabled --> Available : Uninstall 클릭
+    Available --> Enabled : 설치 클릭
+    Enabled --> Installed : 끄기 클릭
+    Installed --> Enabled : 켜기 클릭
+    Installed --> Available : 삭제 (확인 후)
+    Enabled --> Available : 삭제 (확인 후)
 ```
 
-| 버튼 | 일어나는 일 | 이후 claude에서 |
+| 버튼 (내부명) | 일어나는 일 | 이후 claude에서 |
 |---|---|---|
-| Install | 다운로드 + 등록 + 켜기 | 새 세션부터 사용 가능 |
-| Disable | 끄기만 (파일은 유지) | 새 세션부터 안 보임 |
-| Enable | 다시 켜기 | 새 세션부터 사용 가능 |
-| Uninstall | 끄기 + 등록 해제 + 파일 삭제 | 안 보임 |
-| Update | 새 버전 받아 재등록 | 새 세션부터 새 버전 |
+| 설치 (install) | 다운로드 + 등록 + 켜기 | 새 세션부터 사용 가능 |
+| 끄기 (disable) | 끄기만 (파일은 유지) | 새 세션부터 안 보임 |
+| 켜기 (enable) | 다시 켜기 | 새 세션부터 사용 가능 |
+| 🗑 삭제 (uninstall) | **"삭제할까요?" 인라인 확인 후** 끄기 + 등록 해제 + 파일 삭제 → 행이 '미설치'로 복귀 | 안 보임 |
+| 업데이트 (update) | 새 버전 받아 재등록 (켜짐/꺼짐 상태는 그대로) | 새 세션부터 새 버전 |
+
+> 미설치/꺼짐/사용중은 화면 표시명이고, 내부 상태명(Available/Installed/Enabled)과
+> CLI 출력은 영문이다 (Architecture §12.2).
 
 - **Inspect**를 열면 각 플러그인의 실제 상태(파일 존재·등록·켜짐, 버전 차이)를 표로 확인 — 뭔가 이상할 때 여기부터 본다.
 
