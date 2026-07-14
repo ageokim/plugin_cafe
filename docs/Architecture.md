@@ -25,6 +25,7 @@
 | **catalog** | org별 GitHub 스캔 결과 캐시 (`data/plugins.json`) |
 | **marketplace** | Claude Code 네이티브 플러그인 등록 지점. 본 프로젝트 루트의 `.claude-plugin/marketplace.json`을 pm이 생성·갱신 |
 | **local claude** | plugin_market 디렉토리를 cwd로 실행되는 claude — `CLAUDE.md`와 `.claude/` 설정이 적용된 인스턴스 |
+| **preset** | 사용자가 정의한 **플러그인 묶음** — preset 단위로 설치·켜기·끄기·삭제를 일괄 수행하고, "이 preset만 켜기"로 작업 모드처럼 전환(§6.5) |
 
 ### 1.3 핵심 컨셉
 
@@ -34,6 +35,7 @@
 | 다중 org | **단일 GitHub 서버(host)** 위의 여러 org를 등록해 혼합 사용 (다중 호스트는 로드맵 §15) |
 | 설치 | `git clone` → `plugins/{org}/{name}` 저장 → 로컬 marketplace에 등록 |
 | 활성화 | Claude Code 네이티브 `enabledPlugins` 토글 (§6) |
+| preset | 나만의 플러그인 묶음 — 일괄 실행 + 전환 모드 (§6.5) |
 | UI | **정적 프론트(HTML/CSS/JS) + Flask** — 왼쪽 사이드바(플러그인 관리) + 주 화면(claude 챗·내장 터미널) (§12) |
 | 수명 | 브라우저 창을 닫으면 Flask 서버도 자동 종료 (§12.5) |
 | 사용 방법 | `pm` shim을 PATH에 등록해 어디서든 `pm list` … + 웹 UI |
@@ -164,6 +166,7 @@ flowchart TB
 | `services/install_service.py` | `pm install/uninstall`: clone(`plugins/{org}/{name}`) → 등록 / 등록해제 → 삭제(실패 시 부분 clone 정리) | — |
 | `services/activation_service.py` | `pm enable/disable`: registry 위임 | — |
 | `services/inspect_service.py` | `pm inspect`: 파일시스템·marketplace·enabledPlugins 실측 대조, 규약 검사, `--repair` | — |
+| `services/preset_service.py` | **preset CRUD + 일괄 오케스트레이션**(§6.5): 멤버별로 install/activation services를 호출하고 결과 수집, apply(전환) | — |
 | `services/auth_service.py` | 로그인(ID/PAT) 검증, credentials.json 자동 저장/로드, 시작 시 org 일괄 재검증 | — |
 | `envcheck/checker.py` + `checks.py` | `Check` Protocol + 등록형 체크 목록 (§9.4 표) | `Check` |
 | `system/process.py` | cwd=ROOT subprocess 실행, 외부 터미널 실행(보조, OS별) | `CommandRunner` |
@@ -172,6 +175,7 @@ flowchart TB
 | `api/auth.py` | `POST /api/login`, `POST /api/logout`, `GET /api/session` | — |
 | `api/orgs.py` | `GET/POST/DELETE /api/orgs` — org 등록(권한 게이트)·삭제·목록 | — |
 | `api/plugins.py` | `GET /api/plugins`(org별 카탈로그), `POST /api/plugins/{org}/{name}/install·enable·disable·uninstall·update`, `GET /api/inspect` | — |
+| `api/presets.py` | `GET/POST/DELETE /api/presets`, `POST /api/presets/{name}/{action}` (install·enable·disable·uninstall·apply) | — |
 | `api/chat.py` | `POST /api/chat` — claude 챗, **SSE 스트리밍** (Agent SDK, §12.3) | — |
 | `api/terminal.py` | `WS /api/term` — xterm.js ↔ pty 양방향 중계 (flask-sock) | — |
 | `api/lifecycle.py` | `POST /api/heartbeat`, `POST /api/tab-close` — 서버 수명 관리 (§12.5, 종료 판정은 watchdog 전담) | — |
@@ -264,6 +268,29 @@ stateDiagram-v2
 - `Enabled` = Installed ∧ `enabledPlugins["{항목명}@plugin-market"] == true`
 - catalog(JSON)는 스캔 캐시일 뿐, 진실은 파일시스템+설정 파일이다. `pm inspect`가 불일치를 감지·`--repair`로 재동기화한다.
 
+### 6.5 Preset — 플러그인 묶음 일괄 관리
+
+사용자가 정의하는 **플러그인 묶음**. preset 하나에 대해 설치·켜기·끄기·삭제를 실행하면 멤버 전체에 일괄 수행되고, "전환"으로 작업 모드처럼 세트를 갈아탈 수 있다.
+
+- **단위는 플러그인이다** — 요구는 "skill 그룹"이지만 Claude Code의 활성화 단위가 플러그인(enabledPlugins)이라 skill 하나만 켜고 끄는 것은 불가능하다. 원하는 skill이 든 플러그인을 멤버로 담는다. (skill 단위 세분화는 로드맵 §15)
+- **정의만 저장, 상태는 실측**: `data/presets.json`(§8.5)에 멤버 `org/name` 목록만 저장한다. preset의 상태 뱃지(전부 켜짐 / 일부 / 꺼짐)는 §6.4 규칙으로 멤버 상태를 실측해 도출 — "적용됨" 같은 저장 상태를 두지 않는다.
+
+**일괄 실행 의미론:**
+
+| 동작 | 멤버 각각에 수행되는 것 |
+|---|---|
+| preset install | 미설치 멤버만 설치 (§6.2 흐름) |
+| preset enable | **미설치 멤버는 자동 설치 후** 켜기 — "preset 켜기 = 그 세트가 바로 동작하는 상태" 보장 |
+| preset disable | 켜진 멤버 끄기 |
+| preset uninstall | 멤버 전체 삭제 — **웹 UI는 인라인 확인 후**(§12.2), CLI는 즉시 |
+| **preset apply (전환)** | 멤버 전부 켜기(자동 설치 포함) + **멤버가 아닌 설치본은 전부 끄기**. 삭제는 하지 않는다(비파괴) — "코드리뷰 세트" ↔ "문서작업 세트" 같은 모드 전환 |
+
+- **부분 실패 무중단**: 한 멤버가 실패해도 나머지는 계속 진행하고, 멤버별 결과(성공/건너뜀/실패+사유)를 요약 리포트로 반환한다. 종료코드: 전원 성공 0, 일부 실패 1.
+- **깨진 참조**: 멤버가 org 미등록·카탈로그 소멸 상태면 실행 결과에 "참조 깨짐"으로 표시하고 preset 편집에서 정리를 유도한다 (자동 삭제하지 않음).
+- **정의 삭제 ≠ 멤버 삭제**: preset 삭제는 목록 정의만 제거한다(플러그인은 그대로). 멤버까지 지우려면 preset uninstall을 먼저.
+- 적용 시점 규칙은 동일하다 — enabledPlugins 변경이므로 **새 claude 세션부터 반영**(§12.3). 실행 후 "새 대화부터 적용됩니다" 안내.
+- 오케스트레이션은 `services/preset_service.py`가 기존 install/activation services를 호출하는 방식(§5) — 등록 메커니즘(§6.2) 자체는 변하지 않는다.
+
 ---
 
 ## 7. pm CLI 명세
@@ -280,6 +307,11 @@ stateDiagram-v2
 | `pm disable <name>` | `enabledPlugins` false | |
 | `pm inspect [name]` | 상태 실측 리포트: clone/등록/활성화/규약/버전차 | `--env`(§9.4), `--repair`, `--json` |
 | `pm update [org/name]` | git pull + 재등록(캐시 재복사 강제, 활성 상태 보존 — §6.2) · 생략 시 설치된 전체 | |
+| `pm preset create/delete <name>` | preset 정의 생성/제거 (delete는 정의만 — 플러그인 무영향, §6.5) | |
+| `pm preset add/remove <name> <org/plugin>` | 멤버 추가/제거 | |
+| `pm preset list` | preset 목록 + 도출된 상태 뱃지 | `--json` |
+| `pm preset install/enable/disable/uninstall <name>` | 멤버 전체 일괄 실행 (§6.5 — enable은 자동 설치 포함, 부분 실패 무중단·요약) | |
+| `pm preset apply <name>` | **전환**: 멤버만 켜고 나머지 설치본은 끔 (§6.5) | |
 | `pm serve` | Flask 서버 기동 (launcher 내부용 — §12.5 수명 관리 포함) | `--port` |
 
 - 종료 코드: 0 정상 / 1 실행 오류 / 2 사용법 오류. `--json`은 UI·스크립트 연동용.
@@ -359,13 +391,26 @@ stateDiagram-v2
 - 평문 토큰 파일이므로: 생성 시 **권한 600**, `data/`는 git 비추적, 첫 생성 시 경고 1회 표시. 로그아웃 시 삭제. (OS keyring 전환은 로드맵 §15)
 - 자동 로그인이라도 **검증 체인은 매번 수행**된다 — **토큰이 무효(만료·회수)면 로그인 창**으로 돌아가고, 특정 org의 멤버십만 잃은 경우에는 로그인은 유지된 채 **해당 org만 잠긴다**(§10.2).
 
-### 8.5 `data/env.json` — 고정된 인터프리터 (git 비추적)
+### 8.5 `data/presets.json` — preset 정의 (git 비추적)
+
+```json
+{
+  "presets": [
+    { "name": "code-review-set", "members": ["org-a/plugin-a", "org-b/plugin-x"], "created_at": "2026-07-14T03:00:00+00:00" }
+  ]
+}
+```
+
+- 멤버는 `org/name` 참조 목록만 — **상태 필드 없음**(§6.5, 실측 도출). preset 이름은 유일해야 한다.
+- 개인 설정이므로 비추적. 팀 표준 세트 공유는 로드맵(§15).
+
+### 8.6 `data/env.json` — 고정된 인터프리터 (git 비추적)
 
 ```json
 { "python": "/usr/bin/python3.12" }
 ```
 
-### 8.6 Claude Code 측 파일
+### 8.7 Claude Code 측 파일
 
 | 파일 | 내용 | git |
 |---|---|---|
@@ -530,7 +575,8 @@ org URL 입력은 이름/URL/SSH 어느 형태든 허용: 스킴 제거 → `git
 
 ### 12.2 사이드바 (플러그인 파트)
 
-- 구성 (위→아래): **org URL 입력칸**(추가 버튼) → **전역 검색창 + 상태 필터 칩**(모든 org에 걸쳐 필터링하는 단일 컨트롤) → org별 플러그인 그룹(접기/펼치기, 행 = 이름·설명·상태 배지·버튼) → Inspect 요약.
+- 구성 (위→아래): **org URL 입력칸**(추가 버튼) → **전역 검색창 + 상태 필터 칩**(모든 org에 걸쳐 필터링하는 단일 컨트롤) → **Preset 섹션** → org별 플러그인 그룹(접기/펼치기, 행 = 이름·설명·상태 배지·버튼) → Inspect 요약.
+- **Preset 섹션**(§6.5): [+ 새 preset] 버튼과 preset 행 목록. 행 = 이름 + 멤버 수 + 도출 상태 뱃지(전부 켜짐●/일부◐/꺼짐○) + **[전환]** 버튼 + ⋯ 메뉴(일괄 설치·켜기·끄기·삭제 / 멤버 편집 / 정의 삭제). 멤버 일괄 삭제는 인라인 확인을 거친다. 멤버 추가는 플러그인 행 hover 시 나타나는 **+ preset** 아이콘으로. 일괄 실행 결과는 멤버별 성공·실패 요약 토스트로 표시하고, 실행 후 "새 대화부터 적용됩니다" 안내를 띄운다.
 - **org 제거(✕) 후 남은 설치본**: 사이드바의 **'미등록 org' 그룹**으로 계속 표시되어 끄기·삭제가 가능하다 (`pm inspect`도 플래그) — 관리 불가능한 고아 플러그인 방지.
 - 목록 UI 원칙 유지: **페이지네이션 대신 검색 + 필터 칩 + 세로 스크롤**.
 - 상태 표시명(UI 한국어): `Enabled` → **사용중**(초록점), `Installed` → **꺼짐**(노란점), `Available` → **미설치**(회색점) — 내부 상태명(§6.4)과 CLI 출력은 영문 유지.
@@ -646,6 +692,8 @@ run.sh / run.cmd  (환경 체크 통과 후)
 | 8 | 진짜 ID/비밀번호 로그인 UX | PAT 방식 안착 후, 필요 시 OAuth Device Flow(GitHub 로그인 페이지 위임)로 확장 — GHES에 OAuth App 등록 필요 |
 | 9 | 네이티브 창(pywebview) | heartbeat 방식으로 충분하나, "창 닫힘=종료"의 구조적 보장이 필요해지면 검토 (§12.5 대안) |
 | 10 | 플러그인 이름 충돌 UX | 기본 repo명, 충돌 시 `{org}-{name}` 자동 접두(§6.2) — 표시명 규칙은 구현 중 확정 |
+| 11 | preset 팀 공유 | 1차는 개인용(`data/presets.json` 비추적). 팀 표준 세트를 repo에 커밋해 공유하는 형태는 후속 |
+| 12 | skill 단위 세분화 | preset 멤버는 플러그인 단위(§6.5) — Claude Code가 skill 단위 토글을 지원하게 되면 재검토 |
 
 ### 목표 파일 트리
 
@@ -664,7 +712,7 @@ plugin_market/
 ├─ plugins/                       # 설치 plugin clone — plugins/{org}/{name} (비추적)
 ├─ .claude/                       # local claude (settings.json 커밋 / settings.local.json 비추적)
 ├─ .claude-plugin/marketplace.json# pm이 관리하는 로컬 마켓플레이스 (비추적)
-├─ data/                          # config · orgs · plugins · credentials(600) · env .json (비추적)
+├─ data/                          # config · orgs · plugins · credentials(600) · presets · env .json (비추적)
 ├─ tests/
 ├─ docs/                          # Architecture.md · Scenario.md · mockup/
 ├─ pyproject.toml                 # lint 설정 전용

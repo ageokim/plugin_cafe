@@ -13,7 +13,7 @@ data/*
 plugins/*
 !plugins/.gitkeep
 
-# 머신별 상태 (Architecture.md §8.5)
+# 머신별 상태 (Architecture.md §8.7)
 .claude/settings.local.json
 .claude-plugin/marketplace.json
 
