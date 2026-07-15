@@ -15,8 +15,8 @@
 
 | 마일스톤 | 내용 | 상태 |
 |---|---|---|
-| M0 | 개발 기반 (requirements·lint·pytest) | ⬜ |
-| M1 | 기반 모듈 (paths·errors·models·config·store) | ⬜ |
+| M0 | 개발 기반 (requirements·lint·pytest) | ✅ |
+| M1 | 기반 모듈 (paths·errors·models·config·store) | ✅ |
 | M2 | GitHub 연동 (urls·client·rest_client·scanner) | ⬜ |
 | M3 | 설치·등록 코어 (gitops·registry·services·container) | ⬜ |
 | M4 | CLI + envcheck — **첫 실사용 지점** | ⬜ |
@@ -45,10 +45,10 @@
 
 목표: 테스트·린트가 도는 최소 바닥. 코드 없음.
 
-- [ ] `env/requirements.txt` — `flask>=3.0`, `flask-sock`, `requests>=2.31`, `claude-agent-sdk ; python_version >= "3.10"`, `pywinpty ; platform_system=="Windows"` (§9.2 — 하한 핀만)
-- [ ] `env/requirements-dev.txt` — pytest, pylint(+formatter) (§13.3)
-- [ ] `pyproject.toml` — pylint(Google 설정)·formatter 설정 채움 (lint 전용 유지, 패키징 금지 §13.3)
-- [ ] `tests/` 에 스모크 테스트 1개 → `"$PYTHON" -m pytest` 통과 확인 (scripts/ 를 import path에 넣는 conftest.py 포함)
+- [x] `env/requirements.txt` — `flask>=3.0`, `flask-sock`, `requests>=2.31`, `claude-agent-sdk ; python_version >= "3.10"`, `pywinpty ; platform_system=="Windows"` (§9.2 — 하한 핀만)
+- [x] `env/requirements-dev.txt` — pytest, pylint(+formatter) (§13.3)
+- [x] `pyproject.toml` — pylint(Google 설정)·formatter 설정 채움 (lint 전용 유지, 패키징 금지 §13.3)
+- [x] `tests/` 에 스모크 테스트 1개 → `"$PYTHON" -m pytest` 통과 확인 (scripts/ 를 import path에 넣는 conftest.py 포함)
 
 **DoD**: 클린 체크아웃에서 `pip install --user -r env/requirements-dev.txt` 후 pytest·pylint가 돈다.
 
@@ -56,15 +56,15 @@
 
 목표: 이후 전 모듈이 딛고 설 바닥. 순서대로.
 
-- [ ] `pm/paths.py` — `ProjectPaths` dataclass, ROOT 탐색(모듈 위치 기준, cwd 무관 §9.3), data/·plugins/ 경로의 유일한 정의처 (§5)
-- [ ] `pm/errors.py` — `PmError` → `GitHubError/GitOpsError/RegistryError/ConfigError/AuthError` (§5)
-- [ ] `pm/models.py` — 불변 dataclass `Plugin/Org`, `PluginState` enum(미설치/꺼짐/사용중 도출용 §6.4), `CheckResult`, preset 모델(§8.5)
-- [ ] `pm/config.py` — `ConfigProvider`: 기본값 → `data/config.json` → `PM_*` 환경변수 → CLI 플래그 계층 (§8.1). 변경 가능값 표(§2.3) 전 항목 커버
-- [ ] `pm/store/json_store.py` — 원자적 쓰기(임시파일+rename), 손상 시 기본값+경고, credentials 파일은 권한 600 (§5·§8.4)
+- [x] `pm/paths.py` — `ProjectPaths` dataclass, ROOT 탐색(모듈 위치 기준, cwd 무관 §9.3), data/·plugins/ 경로의 유일한 정의처 (§5)
+- [x] `pm/errors.py` — `PmError` → `GitHubError/GitOpsError/RegistryError/ConfigError/AuthError` (§5)
+- [x] `pm/models.py` — 불변 dataclass `Plugin/Org`, `PluginState` enum(미설치/꺼짐/사용중 도출용 §6.4), `CheckResult`, preset 모델(§8.5)
+- [x] `pm/config.py` — `ConfigProvider`: 기본값 → `data/config.json` → `PM_*` 환경변수 → CLI 플래그 계층 (§8.1). 변경 가능값 표(§2.3) 전 항목 커버
+- [x] `pm/store/json_store.py` — 원자적 쓰기(임시파일+rename), 손상 시 기본값+경고, credentials 파일은 권한 600 (§5·§8.4)
 
 테스트: 각 모듈별 — tmp 경로 주입으로 실 파일시스템 오염 없이 (§13.3).
 
-- [ ] paths: 임의 cwd에서도 ROOT 동일 / config: 계층 우선순위·기본값 / store: 원자성(부분 쓰기 없음)·손상 복구·600 권한
+- [x] paths: 임의 cwd에서도 ROOT 동일 / config: 계층 우선순위·기본값 / store: 원자성(부분 쓰기 없음)·손상 복구·600 권한
 
 **DoD**: M1 전 모듈 단위 테스트 통과. 어떤 모듈도 network·전역 상태에 의존하지 않는다.
 
@@ -109,7 +109,7 @@
 - [ ] `pm/cli.py` + `pm/__main__.py` — §7 전 명령(org add/list/remove·list·install·uninstall·enable·disable·inspect·update·preset 6종·serve), 식별자 규칙(`org/name`, bare name은 유일할 때만), 종료코드 0/1/2, `--json`
 - [ ] `system/process.py` — cwd=ROOT subprocess, 외부 터미널 실행(보조) (§5)
 - [ ] `envcheck/checker.py` + `checks.py` — `Check` Protocol + §9.4 13항목, A(부트스트랩 게이트 1~5·13)/B(웹 6~12) 분리, 3.8·3.9 시 챗 폴백 정보성 안내
-- [ ] `scripts/bin/pm`·`pm.cmd` — shim: 자기 위치 ROOT → `exec "$PYTHON" -m pm "$@"` (§9.3)
+- [ ] `scripts/bin/pm`·`pm.cmd` — shim: 자기 위치 ROOT → **`PM_HOME`을 자기 ROOT로 export**(상속분 덮어쓰기 — §9.3 "shim 자기위치 1순위"의 실현 수단) + PYTHONPATH 설정 → `exec "$PYTHON" -m pm "$@"`
 
 테스트:
 

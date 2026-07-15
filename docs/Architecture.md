@@ -344,13 +344,13 @@ stateDiagram-v2
 ```json
 {
   "orgs": [
-    { "name": "org-a", "url": "https://github.xxx.xxx/org-a", "kind": "org",  "added_at": "2026-07-14T02:00:00+00:00" },
-    { "name": "ageokim", "url": "https://github.xxx.xxx/ageokim", "kind": "user", "added_at": "2026-07-14T02:10:00+00:00" }
+    { "name": "org-a", "url": "https://github.xxx.xxx/org-a", "host": "github.xxx.xxx", "kind": "org",  "added_at": "2026-07-14T02:00:00+00:00" },
+    { "name": "ageokim", "url": "https://github.xxx.xxx/ageokim", "host": "github.xxx.xxx", "kind": "user", "added_at": "2026-07-14T02:10:00+00:00" }
   ]
 }
 ```
 
-- 사이드바 URL 입력 또는 `pm org add`로만 항목이 생긴다 — **등록 시점에 권한 게이트를 통과한 것만** 들어온다(§10.2).
+- 사이드바 URL 입력 또는 `pm org add`로만 항목이 생긴다 — **등록 시점에 권한 게이트를 통과한 것만** 들어온다(§10.2). `host`는 쓰기 시점에 org_service가 확정값을 넣는다(§5 Org 모델).
 - 개인 계정(kind=user)은 본인(로그인 ID == 계정명)일 때만 등록 가능.
 
 ### 8.3 `data/plugins.json` — catalog (org별 스캔 캐시, git 비추적)
