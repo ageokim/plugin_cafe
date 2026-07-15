@@ -151,7 +151,7 @@ sequenceDiagram
     SB-->>U: ② org별 그룹으로 목록 표시
     U->>SB: ③ plugin-x [설치] 클릭
     SB->>GH: git clone → plugins/org-b/plugin-x
-    SB->>CL: marketplace 등록 + 활성화
+    SB->>CL: 링크 생성 (.claude/plugin_roots 등)<br>plugin.json 있으면 등록도 병행
     SB-->>U: ④ 배지가 미설치 → 사용중으로 변경
 ```
 
@@ -182,9 +182,10 @@ sequenceDiagram
 - **Claude 탭**: 브라우저에서 claude와 바로 대화. 설치된 플러그인의 skill이 자동 적용. 액션 버튼 = [새 대화].
 - **터미널 탭**: 진짜 셸이다 — `pm` 명령, `claude`(완전한 대화형) 모두 그대로 실행. 원격(SSH)에서도 브라우저만 있으면 동일하게 동작. 액션 버튼 = [새 터미널].
 
-### ⚠️ 적용 시점 규칙 — "새 세션부터"
+### ⚠️ 적용 시점 규칙
 
-플러그인은 claude가 **시작할 때** 읽어들인다:
+- **standalone plugin(사내 기본)**: 링크가 생기는 즉시 경로 참조 가능 — 재시작 불필요.
+- **native plugin(plugin.json 보유)**: skill/command는 claude가 **시작할 때** 읽어들인다:
 
 | 상황 | 새 플러그인 동작? |
 |---|---|
@@ -248,8 +249,8 @@ stateDiagram-v2
 
 | 버튼 (내부명) | 일어나는 일 | 이후 claude에서 |
 |---|---|---|
-| 설치 (install) | 다운로드 + 등록 + 켜기 | 새 세션부터 사용 가능 |
-| 끄기 (disable) | 끄기만 (파일은 유지) | 새 세션부터 안 보임 |
+| 설치 (install) | 다운로드 + 링크 생성(켜기) | standalone 즉시 · native skill은 새 세션부터 |
+| 끄기 (disable) | 링크 제거 (파일은 유지) | standalone 즉시 · native는 새 세션부터 |
 | 켜기 (enable) | 다시 켜기 | 새 세션부터 사용 가능 |
 | 🗑 삭제 (uninstall) | **"삭제할까요?" 인라인 확인 후** 끄기 + 등록 해제 + 파일 삭제 → 행이 '미설치'로 복귀 | 안 보임 |
 | 업데이트 (update) | 새 버전 받아 재등록 (켜짐/꺼짐 상태는 그대로) | 새 세션부터 새 버전 |

@@ -25,6 +25,7 @@
 | M7 | launcher (run.sh/run.cmd·env/ 셋업) | 🔄 |
 | M8 | 통합 검증 (시나리오 1~8 워크스루) | ⬜ |
 | M9 | Workflow 탭 — hooks 기반 실행 타임라인 (§12.7) | 🔄 |
+| M10 | 링크 1급 전환 — 사내 plugin 규약 (§6 재설계) | 🔄 |
 
 상태: ⬜ 미착수 · 🔄 진행중 · ✅ 완료(DoD 통과)
 
@@ -197,6 +198,15 @@
 **DoD**: 계약 테스트 통과 + 실사용 스모크에서 챗·터미널 세션이 모두 타임라인에 잡힘.
 
 > 2026-07-16 구현 완료 — 테스트 15개(총 287) + hook 스크립트 경유 시나리오 재생(depth·플러그인 배지·SSE 팬아웃 실측) + **실제 Claude Code 세션의 hook이 라이브로 수집됨을 확인**(개발 세션 자체가 포착됨). 브라우저 UI 워크스루(펄스 등)는 사용자 수동 확인 항목.
+
+### M10 — 링크 1급 전환 (§6 재설계, 2026-07-16 사내 실태 반영)
+
+- [ ] `claudeplug/links.py` — `PluginLinks`: plugin_roots(상대)·plugins(절대) 링크 생성·제거·실측, POSIX symlink/Windows junction, 링크명 충돌 규칙(§6.2), 링크 자체만 삭제(rmtree 금지)
+- [ ] `registry.py` — 프로파일 감지(plugin.json 유무), native 규약 검사만 유지, standalone은 무검사
+- [ ] `install/activation/inspect` services — enable=링크 생성(+native 등록 병행), disable=링크 제거, 상태 판정=링크 실측(§6.4), repair=링크 기준 재동기화
+- [ ] 테스트: 링크 생성·제거·충돌·타깃 소실, standalone 설치(plugin.json 없는 repo 통과), native 병행, 전 흐름 갱신
+
+**DoD**: plugin.json 없는 사내형 repo가 설치→사용중→끄기→삭제 전 흐름 통과. 링크 실측 상태 도출.
 
 ## 4. 미결정·차단 요소
 

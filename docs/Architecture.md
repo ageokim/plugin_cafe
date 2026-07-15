@@ -160,7 +160,8 @@ flowchart TB
 | `github/scanner.py` | 도메인 정책: description이 설정된 태그를 **모두** 포함하는 repo 필터 | — |
 | `store/json_store.py` | `data/*.json` 원자적 입출력(임시파일+rename — CLI·UI 동시 쓰기 대비), 손상 시 기본값+경고 로그, credentials는 권한 600 | `PluginCatalog` |
 | `gitops.py` | `GitRunner` Protocol + subprocess 구현: `clone`(토큰은 §11 방식), `pull`, `head_commit`. `GIT_TERMINAL_PROMPT=0` | `GitRunner` |
-| `claudeplug/registry.py` | **하이브리드 등록의 핵심** (§6): marketplace.json 생성·갱신, `enabledPlugins` 토글, 규약 검사 | `ClaudePluginRegistry` |
+| `claudeplug/links.py` | **링크 관리의 핵심** (§6.2): `.claude/plugin_roots/`·`.claude/plugins/` 링크 생성·제거·실측 — POSIX symlink / Windows junction, 충돌 규칙 | `PluginLinks` |
+| `claudeplug/registry.py` | **native 병행 경로** (§6.3): 프로파일 감지, marketplace.json 생성·갱신, `enabledPlugins` 토글, native 규약 검사 | `ClaudePluginRegistry` |
 | `services/org_service.py` | **org 등록/삭제/재검증**: URL 파싱 → host 정책 검사 → 멤버십 게이트 → orgs.json 반영 (§10.2) | — |
 | `services/catalog_service.py` | `pm list`: 등록 org 전체(또는 지정 org) 스캔 → **보이는 repo 전부 저장**(`has_tags` 플래그 포함) → 출력 시 태그 필터 적용. `--cached`/`--all`은 같은 캐시에서 동작(재스캔 없음) | — |
 | `services/install_service.py` | `pm install/uninstall/update`: clone(`plugins/{org}/{name}`) → 등록 / 등록해제 → 삭제(실패 시 부분 clone 정리) / update = pull→재등록(§6.2) | — |
@@ -201,50 +202,61 @@ flowchart TB
 
 ---
 
-## 6. 플러그인 등록 메커니즘 — 하이브리드 (네이티브 marketplace 위임)
+## 6. 플러그인 등록 메커니즘 — 링크 1급 + 네이티브 병행 (2026-07-16 재결정)
 
 ### 6.1 결정 배경
 
-원 요구사항은 `.claude`에 심볼릭 링크(plugin_root_path, project_path) 등록을 명시했으나, 프로토타입 검증 과정에서 다음이 확인되어 **등록·활성화를 Claude Code 네이티브 플러그인 시스템에 위임하는 하이브리드 방식으로 재해석**한다:
+두 번의 방향 전환이 있었다. ① 원 요구사항의 심볼릭 링크 방식은 "Claude Code가
+`.claude/plugins/` 링크를 읽지 않는다"는 프로토타입 실측 때문에 네이티브
+marketplace 위임으로 재해석했다(2026-07-14). ② 그러나 **사내 plugin들의 실태 확인**(2026-07-16)으로 다시 재결정한다:
 
-1. 프로토타입이 사용한 `.claude/plugins/{name}` 링크는 **Claude Code가 읽지 않는 경로**다 (Claude Code가 읽는 것: `.claude/commands|agents|skills|rules/`, `settings.json`).
-2. 심볼릭 링크로 가려면 repo 내용물을 종류별로 `.claude/skills/` 등에 나눠 링크해야 하며, Windows에서 symlink 권한(개발자 모드)·junction 제약(절대경로 전용, `Path.is_junction()`은 Python 3.12+, 링크에 rmtree 시 원본 삭제 사고)을 모두 짊어진다.
-3. 네이티브 방식은 **링크 자체가 불필요**해 Windows 리스크가 소멸하고, hooks·MCP·버전 관리까지 표준 UX(`/plugin`)로 지원된다.
+- 사내 plugin은 Claude Code 네이티브 플러그인이 아니라 **standalone 프로그램**이다 —
+  설치란 `.claude/plugin_roots/{name}` 링크로 자기 root 경로를 알 수 있게 하는 것이고,
+  실행은 CLAUDE.md·지시문이 그 경로를 참조해 이뤄진다(경로 참조 실행). MCP도 각
+  plugin이 자기한테만 붙인다.
+- 즉 링크는 Claude Code에게 보여주는 게 아니라 **plugin 자신의 경로 해석 규약**이다 —
+  ①의 실측("Claude Code가 안 읽음")과 모순되지 않는다.
 
-역할 분담: **pm = clone·인증·카탈로그·규약검사** (사내 GHES PAT 인증은 pm이 처리하므로 claude에 자격증명 전달 불필요) / **Claude Code = 등록·활성화·로딩**.
+**최종 모델 — 링크 1급 + 네이티브 병행**:
+
+| 프로파일 | 판별 | install/enable이 하는 일 |
+|---|---|---|
+| **standalone (기본)** | `.claude-plugin/plugin.json` 없음 | 링크 2개 생성(§6.2) — 그게 전부. plugin.json 불요 |
+| **native (자동 감지)** | `.claude-plugin/plugin.json` 있음 | 링크 2개 **+** marketplace 등록·enabledPlugins 토글(§6.3) — skill/command가 claude 세션에 자동 로딩 |
+
+역할 분담: **pm = clone·인증·카탈로그·링크 관리(+네이티브 감지 시 등록)** / plugin = 자기 경로 기준 standalone 동작 / Claude Code = 네이티브형에 한해 로딩.
 
 ### 6.2 동작 흐름
 
 ```
 pm install org-a/plugin-a           (UI에서는 사이드바 버튼)
 ├─ 1. git clone {clone_url}  →  plugins/org-a/plugin-a     (pm, 토큰은 §11 방식)
-├─ 2. 규약 검사: .claude-plugin/plugin.json 존재 등 (부록 A)
-├─ 3. .claude-plugin/marketplace.json에 항목 추가·갱신      (pm)
-│      마켓플레이스 이름: "plugin-market" (디렉토리명 plugin_market과 달리
-│      하이픈 — marketplace name 규칙. enabledPlugins 키의 @ 뒤 부분)
-│      { "name": "plugin-market",
-│        "plugins": [ { "name": "plugin-a", "source": "./plugins/org-a/plugin-a" } ] }
-│      · 항목 name은 기본 repo명, 다른 org와 충돌 시 "{org}-{name}"으로 등록
-└─ 4. 활성화: .claude/settings.local.json의
-       "enabledPlugins": { "plugin-a@plugin-market": true }  토글
+├─ 2. 프로파일 감지: .claude-plugin/plugin.json 있으면 native, 없으면 standalone
+├─ 3. (enable) 링크 2개 생성 — 사내 규약:
+│      .claude/plugin_roots/plugin-a  →  plugins/org-a/plugin-a
+│      .claude/plugins/plugin-a       →  /abs/path/plugins/org-a/plugin-a (절대경로)
+│      POSIX = symlink / Windows = 디렉토리 junction(관리자 불필요, 절대경로 전용)
+└─ 4. (native만 추가) marketplace.json 등록 + enabledPlugins true (§6.3)
 
-pm disable <name>    → enabledPlugins 값을 false로 (clone·등록 유지)
-pm enable  <name>    → true로
-pm uninstall <name>  → enabledPlugins 항목 제거 → marketplace.json 항목 제거
-                       → plugins/{org}/{name} 삭제 (Windows read-only .git 대응 onexc 포함)
-pm update  [org/name] → git pull → marketplace 재등록(캐시 재복사 강제, §6.3)
-                        — enabledPlugins 값은 그대로 보존
+pm disable <name>    → 링크 2개 제거 (clone 유지)  · native면 enabledPlugins false도
+pm enable  <name>    → 링크 2개 생성               · native면 true도
+pm uninstall <name>  → disable → (native면 등록 해제) → plugins/{org}/{name} 삭제
+pm update  [org/name] → git pull (링크는 같은 경로라 그대로) · native면 재등록(§6.3)
 ```
 
-- plugin_market 루트가 곧 **로컬 마켓플레이스**가 된다: source는 상대경로 `./plugins/{org}/{name}` — 저장소를 옮겨도 깨지지 않는다. **여러 org의 플러그인이 하나의 마켓플레이스에 섞여 등록**되므로 claude 입장에서는 출처와 무관하게 동일하게 동작한다(혼합 사용 요구).
-- `enabledPlugins`는 머신별 상태이므로 **`.claude/settings.local.json`**(git 비추적)에 둔다. 팀 공통 설정(권한 allowlist 등)은 `.claude/settings.json`(커밋).
-- 구현은 settings 파일 직접 편집 또는 `claude plugin enable/disable --scope project` CLI 위임 중 택일 — `claudeplug/registry.py` 뒤에 숨겨 어느 쪽이든 교체 가능(OCP).
-- **이름 충돌 규칙**: 먼저 설치된 항목과 그 `enabledPlugins` 키는 **절대 리네임하지 않는다** — 나중에 설치되는 충돌 플러그인만 `{org}-{name}` 항목명을 받는다 (기존 플러그인의 활성 상태가 조용히 풀리는 사고 방지).
-- **update의 의미**: `git pull` + marketplace 재등록으로 Claude Code의 캐시 재복사를 강제하되, **활성 상태(enabledPlugins)는 보존**한다 — 꺼진 플러그인은 꺼진 채 새 버전이 된다. 무인자 `pm update`는 활성 여부와 무관하게 설치된 전체를 갱신한다.
+- **링크명 충돌 규칙**: 링크명은 기본 repo명. 다른 org의 동명 plugin이 이미 링크를
+  소유하면 나중 것은 `{org}-{name}` 링크명을 받는다 — **먼저 설치된 쪽의 링크는
+  절대 리네임하지 않는다** (기존 활성 상태가 조용히 풀리는 사고 방지).
+- **링크 삭제 안전 규칙**: 링크 제거는 링크 자체만 지운다(POSIX `unlink` /
+  Windows junction `rmdir`) — 링크 경로에 rmtree 금지(원본 삭제 사고).
+- **적용 시점**: standalone은 링크가 생기는 즉시 경로 참조가 가능하다. native의
+  skill/command 로딩은 **새 claude 세션부터**(§12.3) — UI 안내는 이 구분을 따른다.
+- MCP: 각 plugin이 자기 것을 자기한테 붙인다 — pm은 관여하지 않는다(사내 규약).
+  native형의 `.mcp.json`은 Claude Code가 로딩.
 
-### 6.3 주의: 설치 캐시 복사와 플러그인의 root path
+### 6.3 native 병행 경로 — marketplace 등록과 캐시 복사 (plugin.json 보유 repo만)
 
-Claude Code는 marketplace 플러그인 설치 시 디렉토리 **트리 전체를 캐시로 복사**한다
+native형(§6.1 표)의 추가 동작이다. Claude Code는 marketplace 플러그인 설치 시 디렉토리 **트리 전체를 캐시로 복사**한다
 (`~/.claude/plugins/cache/{plugin}-{version}/` — 내부 구조 보존):
 
 - `plugins/{org}/{name}`에서 `git pull`만 해서는 반영되지 않는다 → `pm update` = `git pull` + **재등록**(§6.2 — 캐시 재복사 강제, 활성 상태 보존)으로 흡수, `pm inspect`가 clone HEAD와 설치본의 차이를 표시.
@@ -267,9 +279,12 @@ stateDiagram-v2
 ```
 
 **상태는 저장하지 않고 실측으로 도출한다** (프로토타입 검증 원칙 — 저장 상태는 반드시 드리프트한다):
-- `Installed` = `plugins/{org}/{name}` 존재 ∧ marketplace.json에 등록
-- `Enabled` = Installed ∧ `enabledPlugins["{항목명}@plugin-market"] == true`
-- catalog(JSON)는 스캔 캐시일 뿐, 진실은 파일시스템+설정 파일이다. `pm inspect`가 불일치를 감지·`--repair`로 재동기화한다.
+- `Installed` = `plugins/{org}/{name}` clone 존재
+- `Enabled` = Installed ∧ `.claude/plugin_roots/{링크명}` 링크가 그 clone을 가리킴
+  (링크명은 §6.2 충돌 규칙 — name 또는 `{org}-{name}` 양쪽을 실측)
+- native형은 enabledPlugins도 함께 토글되지만 **상태 판정 기준은 링크**다 —
+  두 값이 어긋나면 `pm inspect`가 감지하고 `--repair`가 링크 기준으로 재동기화한다.
+- catalog(JSON)는 스캔 캐시일 뿐, 진실은 파일시스템(clone+링크)이다.
 
 ### 6.5 Preset — 플러그인 묶음 일괄 관리
 
@@ -420,6 +435,7 @@ stateDiagram-v2
 | `.claude-plugin/marketplace.json` | pm이 관리하는 로컬 마켓플레이스 (설치된 플러그인 목록, org 혼합) | 비추적 |
 | `.claude/settings.json` | 팀 공통: 권한 allowlist(§12.3), env, **workflow hooks(§12.7)** | 커밋 |
 | `.claude/settings.local.json` | 머신별: `enabledPlugins`, provider 전환 env(§12.3) | 비추적 |
+| `.claude/plugin_roots/`·`.claude/plugins/` | 설치 링크 — plugin의 root 경로 규약 (§6.2, pm이 생성·제거) | 비추적 |
 
 ---
 
@@ -776,23 +792,35 @@ plugin_market/
 
 ---
 
-## 부록 A. 플러그인 repo 표준 규약 (확정 2026-07-15, §15 #1)
+## 부록 A. 플러그인 repo 표준 규약 (개정 2026-07-16 — standalone 1급)
 
-plugin으로 인식·설치되기 위한 repo 요건:
+plugin으로 인식·설치되기 위한 요건이 **프로파일별로 다르다** (§6.1):
 
-1. **repo description**에 `#plugin`과 `#release`를 모두 포함 (스캔 필터 대상, 대소문자 무관).
-2. **`.claude-plugin/plugin.json` 필수**:
-   ```json
-   { "name": "plugin-a", "version": "0.1.0", "description": "..." }
-   ```
-   `name`은 repo 이름과 일치 권장 (catalog·marketplace 키로 사용).
-3. 다음 중 **1개 이상** 제공: `commands/`, `agents/`, `skills/`, `hooks/`, `.mcp.json`.
-4. `pm inspect`의 규약 검사 항목: plugin.json 존재·파싱 가능, name 일치, 제공 디렉토리 존재, description 태그 유무.
-5. **경로 규칙 (§6.3의 캐시 복사 특성 때문에 필수)** — 플러그인은 설치 시 캐시로 복사되어 원래 위치(`plugins/{org}/{name}`)가 아닌 곳에서 실행된다:
-   - 자기 파일 참조: hooks·monitors·`.mcp.json`에서는 **`${CLAUDE_PLUGIN_ROOT}`** 사용 (절대경로·clone 위치 가정 금지)
-   - skill 내부: SKILL.md 기준 **상대경로**는 안전 (트리 구조가 보존 복사됨)
-   - **cwd 가정 금지**: 스크립트 실행 시 작업 디렉토리는 플러그인 폴더가 아니라 세션 cwd다 — 플러그인 폴더 기준으로 동작해야 하면 `cd "${CLAUDE_PLUGIN_ROOT}" && …`로 시작하거나 `.mcp.json`의 `cwd` 옵션 지정
-   - 영속 데이터(설정·상태)는 플러그인 폴더가 아니라 `${CLAUDE_PLUGIN_DATA}`에 기록 (캐시는 업데이트 시 교체됨)
-   - 플러그인 폴더 **밖** 참조(`../…`) 금지 — 캐시 설치 후 path traversal이 차단됨
+### A.1 공통 (스캔 대상이 되기 위한 유일한 필수 조건)
 
-규약 미준수 repo의 처리(최소 plugin.json 자동 생성 adapter 여부)는 규약 확정 시 함께 결정한다.
+1. **repo description**에 `#plugin`과 `#release`를 모두 포함 (대소문자 무관).
+
+### A.2 standalone 프로파일 (기본 — 사내 plugin 실태)
+
+- **추가 필수 요건 없음.** repo 전체가 plugin의 root이고, 설치 = clone + 링크 2개(§6.2).
+- plugin은 `.claude/plugin_roots/{자기이름}` 링크(또는 자기 위치)를 root로 삼아
+  standalone으로 동작한다. MCP가 필요하면 plugin이 자기한테만 붙인다.
+- 권장: README에 사용법 명시, 실행 스크립트는 자기 위치 기준 상대경로 사용.
+
+### A.3 native 프로파일 (선택 — `.claude-plugin/plugin.json` 보유 시 자동 감지)
+
+skill/command가 claude 세션에 자동 로딩되길 원하는 repo만:
+
+1. **`.claude-plugin/plugin.json`**: `{ "name": "...", "version": "...", "description": "..." }`
+   — `name`은 repo 이름과 일치 권장 (링크명·marketplace 키로 사용).
+2. `commands/`, `agents/`, `skills/`, `hooks/`, `.mcp.json` 중 1개 이상.
+3. **경로 규칙 (§6.3 캐시 복사 때문에 native형만 해당)** — 설치 시 캐시로 복사되어
+   원래 위치가 아닌 곳에서 실행된다: 자기 파일 참조는 `${CLAUDE_PLUGIN_ROOT}`,
+   영속 데이터는 `${CLAUDE_PLUGIN_DATA}`, cwd 가정 금지(`cd "${CLAUDE_PLUGIN_ROOT}" &&`),
+   plugin 폴더 밖 참조(`../…`) 금지.
+
+### A.4 `pm inspect`의 규약 검사
+
+- 공통: description 태그 유무.
+- native형만: plugin.json 파싱 가능·name 일치·제공 디렉토리 존재.
+- standalone형은 검사할 것이 없다 — clone·링크 실측만 한다(§6.4).
