@@ -38,17 +38,17 @@ def test_enum_values_are_stable():
 
 
 @pytest.mark.parametrize(
-    "cloned,registered,enabled",
-    list(itertools.product([True, False], repeat=3)),
+    "cloned,linked",
+    list(itertools.product([True, False], repeat=2)),
 )
-def test_derive_state_truth_table(cloned, registered, enabled):
-    state = derive_state(cloned=cloned, registered=registered, enabled=enabled)
-    if cloned and registered and enabled:
+def test_derive_state_truth_table(cloned, linked):
+    state = derive_state(cloned=cloned, linked=linked)
+    if cloned and linked:
         assert state is PluginState.ENABLED
-    elif cloned and registered:
+    elif cloned:
         assert state is PluginState.INSTALLED
     else:
-        assert state is PluginState.AVAILABLE
+        assert state is PluginState.AVAILABLE  # 링크만 잔존 = 드리프트 (§6.4)
 
 
 def test_plugin_roundtrip():

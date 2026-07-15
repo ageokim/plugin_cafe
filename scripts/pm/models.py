@@ -33,24 +33,22 @@ class OrgKind(enum.Enum):
     USER = "user"
 
 
-def derive_state(*, cloned: bool, registered: bool,
-                 enabled: bool) -> PluginState:
+def derive_state(*, cloned: bool, linked: bool) -> PluginState:
     """파일시스템 실측값에서 상태를 도출한다 (§6.4 — 상태는 저장하지 않는다).
 
-    Installed = clone 존재 ∧ marketplace 등록, Enabled = Installed ∧
-    enabledPlugins true. 드리프트 조합(clone만 존재, 등록만 잔존 등)은
-    AVAILABLE로 보고한다 — 교정은 ``pm inspect --repair``(§7)의 몫.
+    Installed = clone 존재, Enabled = clone 존재 ∧ plugin_roots 링크가
+    그 clone을 가리킴. 링크만 남은 드리프트(clone 소실)는 AVAILABLE로
+    보고한다 — 교정은 ``pm inspect --repair``(§7)의 몫.
 
     Args:
         cloned: ``plugins/{org}/{name}`` clone 존재 여부.
-        registered: marketplace.json 등록 여부.
-        enabled: enabledPlugins true 여부.
+        linked: ``.claude/plugin_roots/{링크명}`` 링크 실측 (§6.2).
 
     Returns:
         도출된 PluginState.
     """
-    if cloned and registered:
-        return PluginState.ENABLED if enabled else PluginState.INSTALLED
+    if cloned:
+        return PluginState.ENABLED if linked else PluginState.INSTALLED
     return PluginState.AVAILABLE
 
 

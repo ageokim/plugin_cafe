@@ -12,7 +12,7 @@ import enum
 import logging
 from typing import Callable, List, Optional
 
-from pm.claudeplug.registry import ClaudePluginRegistry, parse_source
+from pm.claudeplug.registry import ClaudePluginRegistry
 from pm.errors import PmError
 from pm.models import Plugin, PluginState, Preset, utc_now_iso
 from pm.services.activation_service import ActivationService
@@ -169,18 +169,22 @@ class PresetService:
         return self._for_each(name, self._uninstall_member)
 
     def apply(self, name: str) -> List[MemberResult]:
-        """전환: 멤버 전부 켜기 + 멤버 외 설치본 전부 끄기 (비파괴, §6.5)."""
+        """전환: 멤버 전부 켜기 + 멤버 외 설치본 전부 끄기 (비파괴, §6.5).
+
+        설치본 열거는 디스크 실측(§6.4) — 링크 1급이라 native 등록 여부와
+        무관하게 standalone 설치본도 전환 대상이 된다.
+        """
         results = self._for_each(name, self._enable_member)
         members = set(self.get(name).members)
-        for entry_name, source in self._registry.registered().items():
-            parsed = parse_source(source)
-            if parsed is None:
+        for org, plugin_name in self._activation.installed_refs():
+            ref = f"{org}/{plugin_name}"
+            if ref in members:
                 continue
-            ref = f"{parsed[0]}/{parsed[1]}"
-            if ref in members or not self._registry.is_enabled(entry_name):
+            if self._activation.state(org,
+                                      plugin_name) is not PluginState.ENABLED:
                 continue
             try:
-                self._registry.set_enabled(entry_name, False)
+                self._activation.disable(org, plugin_name)
                 results.append(
                     MemberResult(ref, "disabled", True, "preset 외 — 전환"))
             except PmError as e:

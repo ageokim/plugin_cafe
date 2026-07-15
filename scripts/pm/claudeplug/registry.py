@@ -38,10 +38,22 @@ def parse_source(source: str) -> Optional[Tuple[str, str]]:
     return None
 
 
-def validate_convention(clone_dir: Path) -> Tuple[List[str], List[str]]:
-    """부록 A 규약 검사 → (오류, 경고).
+def detect_profile(clone_dir: Path) -> str:
+    """프로파일 자동 감지 (§6.1 표) — plugin.json 유무가 유일한 기준.
 
-    오류(설치 차단): plugin.json 부재·파싱 불가·name 부재, 컴포넌트 없음.
+    Returns:
+        "native" (plugin.json 보유 — marketplace 등록 병행) 또는
+        "standalone" (기본 — 링크만, 추가 규약 없음 부록 A.2).
+    """
+    manifest = clone_dir / ".claude-plugin" / "plugin.json"
+    return "native" if manifest.is_file() else "standalone"
+
+
+def validate_convention(clone_dir: Path) -> Tuple[List[str], List[str]]:
+    """native 프로파일 규약 검사 → (오류, 경고) (부록 A.3·A.4).
+
+    standalone repo에는 호출하지 않는다 — 검사할 것이 없다(부록 A.2).
+    오류(설치 차단): plugin.json 파싱 불가·name 부재, 컴포넌트 없음.
     경고(권장 위반): plugin.json name ≠ repo 디렉토리명.
     """
     errors: List[str] = []

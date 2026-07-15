@@ -109,6 +109,16 @@ class ProjectPaths:
         return self.root / ".claude"
 
     @property
+    def plugin_roots_dir(self) -> Path:
+        """설치 링크 — plugin의 root 해석 규약 (§6.2, 사내 관례 1번)."""
+        return self.claude_dir / "plugin_roots"
+
+    @property
+    def plugin_links_dir(self) -> Path:
+        """설치 링크 — 절대경로판 (§6.2, 사내 관례 2번)."""
+        return self.claude_dir / "plugins"
+
+    @property
     def claude_settings_file(self) -> Path:
         """팀 공통 설정(커밋 대상) — allowlist 등 (§8.7)."""
         return self.claude_dir / "settings.json"

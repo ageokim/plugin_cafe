@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from pm.claudeplug.links import PluginLinks
 from pm.claudeplug.registry import MARKETPLACE_NAME, ClaudePluginRegistry
 from pm.config import ConfigProvider
 from pm.errors import AuthError, GitHubError, GitOpsError
@@ -57,22 +58,30 @@ class RecordingGitRunner:
 
     def __init__(self):
         self.calls = []
-        self.valid_plugin = True
+        self.valid_plugin = True  # True=native 뼈대 / False=standalone(맨 repo)
+        self.broken_native = False  # True=plugin.json은 있으나 name 없음
         self.fail_urls = set()
 
     def clone(self, clone_url, dest):
-        """fail_urls면 실패, 아니면 규약 통과 뼈대를 만든다."""
+        """fail_urls면 실패, 아니면 프로파일별 뼈대를 만든다 (§6.1)."""
         self.calls.append(("clone", clone_url, str(dest)))
         if clone_url in self.fail_urls:
             raise GitOpsError(f"clone 실패: {clone_url}")
         dest.mkdir(parents=True)
-        if self.valid_plugin:
+        if self.broken_native:
+            manifest_dir = dest / ".claude-plugin"
+            manifest_dir.mkdir()
+            (manifest_dir / "plugin.json").write_text(
+                json.dumps({"version": "0.1.0"}), encoding="utf-8")
+        elif self.valid_plugin:
             manifest_dir = dest / ".claude-plugin"
             manifest_dir.mkdir()
             manifest = {"name": dest.name, "version": "0.1.0"}
             (manifest_dir / "plugin.json").write_text(
                 json.dumps(manifest), encoding="utf-8")
             (dest / "skills").mkdir()
+        else:
+            (dest / "run.sh").write_text("#!/bin/sh\n", encoding="utf-8")
 
     def pull(self, repo_dir):
         self.calls.append(("pull", str(repo_dir)))
@@ -114,6 +123,7 @@ class ServicesEnv:
                                      env={})
         self.registry = ClaudePluginRegistry(self.marketplace_store,
                                              self.settings_store)
+        self.links = PluginLinks(paths)
         self.auth = AuthService(self.credentials_store, factory, self.config)
 
         def now():
@@ -124,10 +134,12 @@ class ServicesEnv:
         self.catalog_service = CatalogService(self.config, self.catalog_store,
                                               self.org_service, factory,
                                               self.auth, now_factory=now)
-        self.install_service = InstallService(paths, self.git, self.registry)
-        self.activation_service = ActivationService(self.registry, paths)
+        self.install_service = InstallService(paths, self.git,
+                                              self.registry, self.links)
+        self.activation_service = ActivationService(self.registry, paths,
+                                                    self.links)
         self.inspect_service = InspectService(paths, self.registry,
-                                              self.orgs_store)
+                                              self.orgs_store, self.links)
         self.preset_service = PresetService(self.presets_store,
                                             self.catalog_service,
                                             self.install_service,

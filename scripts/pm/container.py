@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from typing import Any, Mapping, Optional
 
+from pm.claudeplug.links import PluginLinks
 from pm.claudeplug.registry import MARKETPLACE_NAME, ClaudePluginRegistry
 from pm.config import ConfigProvider
 from pm.errors import ConfigError
@@ -71,6 +72,7 @@ class Container:
             settings_store=JsonStore(self.paths.claude_settings_local_file,
                                      default=dict),
         )
+        self.links = PluginLinks(self.paths)
         self.auth = AuthService(self.credentials_store, self.github_client,
                                 self.config)
         self.git = SubprocessGitRunner(
@@ -86,10 +88,11 @@ class Container:
                                               self.org_service,
                                               self.github_client, self.auth)
         self.install_service = InstallService(self.paths, self.git,
-                                              self.registry)
-        self.activation_service = ActivationService(self.registry, self.paths)
+                                              self.registry, self.links)
+        self.activation_service = ActivationService(self.registry, self.paths,
+                                                    self.links)
         self.inspect_service = InspectService(self.paths, self.registry,
-                                              self.orgs_store)
+                                              self.orgs_store, self.links)
         self.preset_service = PresetService(self.presets_store,
                                             self.catalog_service,
                                             self.install_service,

@@ -21,12 +21,13 @@ def test_clean_install_has_no_issues(env):
     assert status.issues == ()
 
 
-def test_clone_only_drift_flagged(env):
+def test_clone_only_is_standalone_installed(env):
+    """링크 1급(§6.4): clone만 있으면 standalone 꺼짐 — 드리프트 아님."""
     env.login_and_register_org("org-a")
     env.paths.plugin_clone_dir("org-a", "stray").mkdir(parents=True)
     status = _status(env, "org-a", "stray")
-    assert status.state is PluginState.AVAILABLE  # 드리프트는 미설치 취급
-    assert any("clone만 존재" in issue for issue in status.issues)
+    assert status.state is PluginState.INSTALLED
+    assert not any("드리프트" in issue for issue in status.issues)
 
 
 def test_entry_only_drift_flagged_and_repaired(env):
@@ -67,9 +68,21 @@ def test_convention_violation_reported(env):
     env.install_service.install(plugin)
     manifest = (env.paths.plugin_clone_dir("org-a", "plugin-a") /
                 ".claude-plugin" / "plugin.json")
-    manifest.unlink()  # 설치 후 손상
+    manifest.write_text('{"version": "0.1.0"}', encoding="utf-8")  # name 소실
     status = _status(env, "org-a", "plugin-a")
     assert any("규약 위반" in issue for issue in status.issues)
+
+
+def test_manifest_removed_flags_stale_native_entry(env):
+    """plugin.json이 사라지면 standalone으로 강등 — 잔존 native 등록은 드리프트."""
+    env.login_and_register_org("org-a")
+    plugin = env.catalog_plugin("org-a", "plugin-a")
+    env.install_service.install(plugin)
+    (env.paths.plugin_clone_dir("org-a", "plugin-a") /
+     ".claude-plugin" / "plugin.json").unlink()
+    status = _status(env, "org-a", "plugin-a")
+    assert status.state is PluginState.ENABLED  # 링크 기준 — 여전히 사용중
+    assert any("native 등록 잔존" in issue for issue in status.issues)
 
 
 def test_repair_keeps_healthy_install(env):

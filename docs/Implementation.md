@@ -25,7 +25,7 @@
 | M7 | launcher (run.sh/run.cmd·env/ 셋업) | 🔄 |
 | M8 | 통합 검증 (시나리오 1~8 워크스루) | ⬜ |
 | M9 | Workflow 탭 — hooks 기반 실행 타임라인 (§12.7) | 🔄 |
-| M10 | 링크 1급 전환 — 사내 plugin 규약 (§6 재설계) | 🔄 |
+| M10 | 링크 1급 전환 — 사내 plugin 규약 (§6 재설계) | ✅ |
 
 상태: ⬜ 미착수 · 🔄 진행중 · ✅ 완료(DoD 통과)
 
@@ -201,12 +201,14 @@
 
 ### M10 — 링크 1급 전환 (§6 재설계, 2026-07-16 사내 실태 반영)
 
-- [ ] `claudeplug/links.py` — `PluginLinks`: plugin_roots(상대)·plugins(절대) 링크 생성·제거·실측, POSIX symlink/Windows junction, 링크명 충돌 규칙(§6.2), 링크 자체만 삭제(rmtree 금지)
-- [ ] `registry.py` — 프로파일 감지(plugin.json 유무), native 규약 검사만 유지, standalone은 무검사
-- [ ] `install/activation/inspect` services — enable=링크 생성(+native 등록 병행), disable=링크 제거, 상태 판정=링크 실측(§6.4), repair=링크 기준 재동기화
-- [ ] 테스트: 링크 생성·제거·충돌·타깃 소실, standalone 설치(plugin.json 없는 repo 통과), native 병행, 전 흐름 갱신
+- [x] `claudeplug/links.py` — `PluginLinks`: plugin_roots(상대)·plugins(절대) 링크 생성·제거·실측, POSIX symlink/Windows junction, 링크명 충돌 규칙(§6.2), 링크 자체만 삭제(rmtree 금지)
+- [x] `registry.py` — 프로파일 감지(plugin.json 유무), native 규약 검사만 유지, standalone은 무검사
+- [x] `install/activation/inspect` services — enable=링크 생성(+native 등록 병행), disable=링크 제거, 상태 판정=링크 실측(§6.4), repair=링크 기준 재동기화
+- [x] 테스트: 링크 생성·제거·충돌·타깃 소실, standalone 설치(plugin.json 없는 repo 통과), native 병행, 전 흐름 갱신
 
 **DoD**: plugin.json 없는 사내형 repo가 설치→사용중→끄기→삭제 전 흐름 통과. 링크 실측 상태 도출.
+
+> 2026-07-16 완료 — 292 테스트 통과 + **실제 git repo(사내형, 맨 repo)로 전 흐름 실측**: 상대/절대 링크 생성·marketplace 비관여·disable 원본 무손상·uninstall 완전 정리. preset apply도 디스크 실측 열거로 전환.
 
 ## 4. 미결정·차단 요소
 

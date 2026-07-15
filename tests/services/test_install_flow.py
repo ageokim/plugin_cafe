@@ -44,14 +44,34 @@ def test_install_no_enable(env):
             is PluginState.INSTALLED)
 
 
-def test_install_convention_violation_rolls_back(env):
+def test_install_native_violation_rolls_back(env):
+    """native형(plugin.json 보유)인데 name이 없으면 설치 차단·되감기 (부록 A.3)."""
     env.login_and_register_org("org-a")
     plugin = env.catalog_plugin("org-a", "bad-plugin")
-    env.git.valid_plugin = False  # plugin.json 없는 clone
+    env.git.broken_native = True  # plugin.json은 있으나 name 없음
     with pytest.raises(RegistryError):
         env.install_service.install(plugin)
     assert not env.paths.plugin_clone_dir("org-a", "bad-plugin").exists()
     assert env.registry.registered() == {}  # 부분 산출물 없음 (§6.2)
+    assert not env.links.is_enabled("org-a", "bad-plugin")
+
+
+def test_install_standalone_without_manifest(env):
+    """plugin.json 없는 사내형 repo도 설치된다 — 링크 2개 생성 (부록 A.2)."""
+    env.login_and_register_org("org-a")
+    plugin = env.catalog_plugin("org-a", "inhouse")
+    env.git.valid_plugin = False  # 맨 repo (standalone)
+    result = env.install_service.install(plugin)
+    assert result.profile == "standalone"
+    assert env.registry.registered() == {}  # native 등록 없음
+    clone = env.paths.plugin_clone_dir("org-a", "inhouse")
+    root_link = env.paths.plugin_roots_dir / "inhouse"
+    abs_link = env.paths.plugin_links_dir / "inhouse"
+    assert root_link.resolve() == clone.resolve()  # 사내 관례 1번 (§6.2)
+    assert abs_link.resolve() == clone.resolve()  # 2번 — 절대경로판
+    import os
+    assert not os.path.isabs(os.readlink(str(root_link)))  # 1번은 상대
+    assert os.path.isabs(os.readlink(str(abs_link)))
 
 
 def test_install_clone_failure_propagates(env):
