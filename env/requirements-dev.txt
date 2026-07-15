@@ -1,0 +1,4 @@
+# 개발 도구 (선택 설치 — Architecture.md §13.3)
+pytest>=7.4
+pylint>=3.0
+yapf>=0.40
