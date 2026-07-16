@@ -208,7 +208,7 @@
 
 **DoD**: plugin.json 없는 사내형 repo가 설치→사용중→끄기→삭제 전 흐름 통과. 링크 실측 상태 도출.
 
-> 2026-07-16 완료(+사내 표준 구조 반영) — 295 테스트 통과. 사내 매니페스트 `plugin/plugin.json` 인식(링크명=매니페스트 name 우선, 파싱·불일치는 권장 경고), 링크 실측을 타깃 스캔으로 강인화. **실제 git repo(사내형, 맨 repo)로 전 흐름 실측**: 상대/절대 링크 생성·marketplace 비관여·disable 원본 무손상·uninstall 완전 정리. preset apply도 디스크 실측 열거로 전환.
+> 2026-07-16 완료(+사내 표준 구조·**컴포넌트 링크** 반영 — enable 시 commands는 파일 링크, skills는 디렉토리 링크(공식 지원), workflows는 파일 링크로 `.claude/` 아래 연결되어 claude가 인식. native는 marketplace 로딩이라 제외. disable/uninstall 실측 스캔 제거·update 재동기화. 299 테스트) — 295 테스트 통과. 사내 매니페스트 `plugin/plugin.json` 인식(링크명=매니페스트 name 우선, 파싱·불일치는 권장 경고), 링크 실측을 타깃 스캔으로 강인화. **실제 git repo(사내형, 맨 repo)로 전 흐름 실측**: 상대/절대 링크 생성·marketplace 비관여·disable 원본 무손상·uninstall 완전 정리. preset apply도 디스크 실측 열거로 전환.
 
 ## 4. 미결정·차단 요소
 

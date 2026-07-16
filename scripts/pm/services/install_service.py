@@ -87,6 +87,9 @@ class InstallService:
                 link_name = self._links.enable(
                     plugin.org, plugin.name,
                     preferred=manifest_name(dest))  # §6.2 링크명 규칙
+                if profile == "standalone":  # 컴포넌트 링크 (§6.2 4단계)
+                    self._links.enable_components(plugin.org, plugin.name,
+                                                  link_name)
                 if entry_name is not None:
                     self._registry.set_enabled(entry_name, True)
         except BaseException:
@@ -130,6 +133,10 @@ class InstallService:
         self._git.pull(dest)
         if detect_profile(dest) == "native":
             self._registry.register(org, name)  # 멱등 — 활성 상태 불변
+        else:
+            link_name = self._links.link_name_for(org, name)
+            if link_name is not None:  # 켜져 있을 때만 재동기화 (§6.2)
+                self._links.resync_components(org, name, link_name)
         return self._git.head_commit(dest)
 
     def _rollback(self, plugin: Plugin, entry_name) -> None:

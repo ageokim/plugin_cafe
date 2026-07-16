@@ -183,3 +183,68 @@ def test_install_bare_repo_warns_structure(env):
     result = env.install_service.install(plugin)
     assert result.profile == "standalone"
     assert any("사내 표준 구조 미보유" in w for w in result.warnings)
+
+
+def test_install_inhouse_links_components(env):
+    """§6.2 4단계 — commands·skills·workflows가 .claude/ 아래로 링크된다."""
+    env.login_and_register_org("org-a")
+    plugin = env.catalog_plugin("org-a", "toolkit")
+    env.git.valid_plugin = False
+    env.git.inhouse_plugin = True
+    env.install_service.install(plugin)
+    clone = env.paths.plugin_clone_dir("org-a", "toolkit")
+    cmd = env.paths.claude_commands_dir / "hello.md"
+    skill = env.paths.claude_skills_dir / "greet"
+    wf = env.paths.claude_workflows_dir / "flow.js"
+    assert cmd.resolve() == (clone / "plugin/commands/hello.md").resolve()
+    assert (skill / "SKILL.md").is_file()  # 디렉토리 링크 경유 접근
+    assert wf.resolve() == (clone / "plugin/workflows/flow.js").resolve()
+
+
+def test_disable_removes_component_links_only_own(env):
+    """끄기는 자기 컴포넌트 링크만 제거 — 남의 것·원본은 불변."""
+    env.login_and_register_org("org-a")
+    p1 = env.catalog_plugin("org-a", "tool-1")
+    env.git.valid_plugin = False
+    env.git.inhouse_plugin = True
+    env.install_service.install(p1)
+    # 두 번째 plugin — 같은 hello.md 이름 → 접두 폴백
+    p2 = env.catalog_plugin("org-a", "tool-2")
+    env.install_service.install(p2)
+    prefixed = env.paths.claude_commands_dir / "tool-2-hello.md"
+    assert prefixed.exists()  # 충돌 → {링크명}-{이름} (§6.2)
+
+    env.activation_service.disable("org-a", "tool-1")
+    assert not (env.paths.claude_commands_dir / "hello.md").exists()
+    assert prefixed.exists()  # tool-2 것은 그대로
+    assert (env.paths.plugin_clone_dir("org-a", "tool-1") /
+            "plugin/commands/hello.md").is_file()  # 원본 무손상
+
+    # 다시 켜면 컴포넌트도 복원
+    env.activation_service.enable("org-a", "tool-1")
+    assert (env.paths.claude_commands_dir / "hello.md").exists()
+
+
+def test_update_resyncs_components(env):
+    """update가 컴포넌트 링크를 재동기화 — 새 파일 반영·삭제 파일 정리."""
+    env.login_and_register_org("org-a")
+    plugin = env.catalog_plugin("org-a", "toolkit")
+    env.git.valid_plugin = False
+    env.git.inhouse_plugin = True
+    env.install_service.install(plugin)
+    clone = env.paths.plugin_clone_dir("org-a", "toolkit")
+    (clone / "plugin/commands/hello.md").unlink()  # pull이 지웠다고 가정
+    (clone / "plugin/commands/new-cmd.md").write_text("새 명령",
+                                                      encoding="utf-8")
+    env.install_service.update("org-a", "toolkit")
+    assert not (env.paths.claude_commands_dir / "hello.md").exists()
+    assert (env.paths.claude_commands_dir / "new-cmd.md").exists()
+
+
+def test_native_profile_gets_no_component_links(env):
+    """native는 marketplace가 로딩 — 컴포넌트 링크 없음(중복 방지 §6.2)."""
+    env.login_and_register_org("org-a")
+    plugin = env.catalog_plugin("org-a", "native-p")
+    env.install_service.install(plugin)  # valid_plugin=True → native
+    assert not env.paths.claude_commands_dir.exists() or \
+        not any(env.paths.claude_commands_dir.iterdir())

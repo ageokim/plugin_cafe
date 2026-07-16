@@ -11,7 +11,7 @@ from typing import List, Tuple
 
 from pm.claudeplug.links import PluginLinks
 from pm.claudeplug.registry import (ClaudePluginRegistry,
-                                    manifest_name)
+                                    detect_profile, manifest_name)
 from pm.errors import RegistryError
 from pm.models import PluginState, derive_state
 from pm.paths import ProjectPaths
@@ -39,7 +39,10 @@ class ActivationService:
             RegistryError: clone 없음 — 설치 먼저.
         """
         clone_dir = self._paths.plugin_clone_dir(org, name)
-        self._links.enable(org, name, preferred=manifest_name(clone_dir))
+        link_name = self._links.enable(org, name,
+                                       preferred=manifest_name(clone_dir))
+        if detect_profile(clone_dir) == "standalone":  # §6.2 4단계
+            self._links.enable_components(org, name, link_name)
         self._sync_native(org, name, True)
 
     def disable(self, org: str, name: str) -> None:

@@ -88,8 +88,15 @@ class RecordingGitRunner:
             (plugin_dir / "plugin.json").write_text(
                 json.dumps({"name": self.inhouse_name or dest.name,
                             "version": "1.0.0"}), encoding="utf-8")
-            for comp in ("commands", "skills", "workflows"):
-                (plugin_dir / comp).mkdir()
+            (plugin_dir / "commands").mkdir()
+            (plugin_dir / "commands" / "hello.md").write_text(
+                "인사 명령", encoding="utf-8")
+            (plugin_dir / "skills" / "greet").mkdir(parents=True)
+            (plugin_dir / "skills" / "greet" / "SKILL.md").write_text(
+                "---\nname: greet\n---\n", encoding="utf-8")
+            (plugin_dir / "workflows").mkdir()
+            (plugin_dir / "workflows" / "flow.js").write_text(
+                "export const meta = {}", encoding="utf-8")
         else:
             (dest / "run.sh").write_text("#!/bin/sh\n", encoding="utf-8")
 

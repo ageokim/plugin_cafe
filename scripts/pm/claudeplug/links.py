@@ -30,6 +30,23 @@ def _points_to(link: Path, target: Path) -> bool:
         return False
 
 
+def _inside(path: Path, ancestor: Path) -> bool:
+    """path(resolve)가 ancestor 아래인지 — 컴포넌트 링크 소유 판정 (§6.2)."""
+    try:
+        resolved = path.resolve()
+        root = ancestor.resolve()
+    except OSError:
+        return False
+    return root == resolved or root in resolved.parents
+
+
+def component_root(clone_dir: Path) -> Path:
+    """컴포넌트 탐색 기준 — 사내 표준 ``plugin/`` 폴더, 없으면 repo 루트
+    (부록 A.2)."""
+    nested = clone_dir / "plugin"
+    return nested if nested.is_dir() else clone_dir
+
+
 class PluginLinks:
     """링크 생성·제거·실측 (§6.2 — 상태 판정의 진실 §6.4).
 
@@ -107,7 +124,9 @@ class PluginLinks:
         return link_name
 
     def disable(self, org: str, name: str) -> Optional[str]:
-        """이 clone을 가리키는 링크 2개 제거 — 없었으면 None (멱등)."""
+        """이 clone을 가리키는 링크 전부 제거 — root 2개 + 컴포넌트 (§6.2).
+        링크가 없었으면 None (멱등)."""
+        self.disable_components(org, name)
         link_name = self.link_name_for(org, name)
         if link_name is None:
             return None
@@ -117,14 +136,138 @@ class PluginLinks:
         return link_name
 
     def remove_dangling(self) -> List[str]:
-        """깨진 링크 정리 — 제거한 링크명 목록 (repair §6.4)."""
+        """깨진 링크 정리 — 제거한 링크명 목록 (repair §6.4).
+        root 링크 2종 + 컴포넌트 링크 디렉토리 전부를 훑는다."""
         removed = []
         for link_name in self.dangling():
             for base in (self._paths.plugin_roots_dir,
                          self._paths.plugin_links_dir):
                 self._remove_link(base / link_name)
             removed.append(link_name)
+        for base in self._component_bases():
+            if not base.is_dir():
+                continue
+            for link in list(base.iterdir()):
+                if not os.path.islink(str(link)):
+                    continue
+                try:
+                    broken = not link.resolve().exists()
+                except OSError:
+                    broken = True
+                if broken:
+                    self._remove_link(link)
+                    removed.append(f"{base.name}/{link.name}")
         return removed
+
+    # ── 컴포넌트 링크 (§6.2 4단계 — standalone 전용) ─────────
+    def enable_components(self, org: str, name: str,
+                          link_name: str) -> List[str]:
+        """plugin이 가진 컴포넌트만 골라 `.claude/` 아래로 링크한다.
+
+        commands·workflows = 파일 단위 flat 링크(재귀 미보장 대응),
+        skills = SKILL.md 보유 디렉토리 링크(공식 지원). 이름 충돌 시
+        신규만 ``{링크명}-{이름}`` — 기존은 불변 (§6.2).
+
+        Returns:
+            생성한 링크의 표시 목록 (예: ``commands/hello.md``).
+        """
+        clone = self._paths.plugin_clone_dir(org, name)
+        comp = component_root(clone)
+        created: List[str] = []
+        cmd_dir = comp / "commands"
+        if cmd_dir.is_dir():
+            for src in sorted(cmd_dir.glob("*.md")):
+                created += self._link_component(
+                    self._paths.claude_commands_dir, src, src.name,
+                    link_name, is_dir=False)
+        skills_dir = comp / "skills"
+        if skills_dir.is_dir():
+            for src in sorted(skills_dir.iterdir()):
+                if src.is_dir() and (src / "SKILL.md").is_file():
+                    created += self._link_component(
+                        self._paths.claude_skills_dir, src, src.name,
+                        link_name, is_dir=True)
+        wf_dir = comp / "workflows"
+        if wf_dir.is_dir():
+            for src in sorted(wf_dir.iterdir()):
+                if src.is_file():
+                    created += self._link_component(
+                        self._paths.claude_workflows_dir, src, src.name,
+                        link_name, is_dir=False)
+        return created
+
+    def disable_components(self, org: str, name: str) -> List[str]:
+        """이 clone 안을 가리키는 컴포넌트 링크 전부 제거 — 실측 스캔.
+
+        Windows 파일 컴포넌트는 하드링크라 islink로 안 잡힌다 —
+        clone 쪽 파일과 inode 대조(samefile 의미론)로 소유를 판정한다.
+        """
+        clone = self._paths.plugin_clone_dir(org, name)
+        clone_inodes = self._file_inodes(component_root(clone)) \
+            if self._windows else set()
+        removed: List[str] = []
+        for base in self._component_bases():
+            if not base.is_dir():
+                continue
+            for link in list(base.iterdir()):
+                owned = os.path.islink(str(link)) and _inside(link, clone)
+                if not owned and self._windows and link.is_file():
+                    try:
+                        stat = link.stat()
+                        owned = (stat.st_dev, stat.st_ino) in clone_inodes
+                    except OSError:
+                        owned = False
+                if owned:
+                    self._remove_link(link)
+                    removed.append(f"{base.name}/{link.name}")
+        return removed
+
+    @staticmethod
+    def _file_inodes(comp: Path) -> set:
+        inodes = set()
+        for sub in ("commands", "workflows"):
+            directory = comp / sub
+            if not directory.is_dir():
+                continue
+            for src in directory.iterdir():
+                if src.is_file():
+                    try:
+                        stat = src.stat()
+                        inodes.add((stat.st_dev, stat.st_ino))
+                    except OSError:
+                        pass
+        return inodes
+
+    def resync_components(self, org: str, name: str,
+                          link_name: str) -> List[str]:
+        """update 후 재동기화 — 파일 추가·삭제 반영 (§6.2)."""
+        self.disable_components(org, name)
+        return self.enable_components(org, name, link_name)
+
+    def _component_bases(self) -> List[Path]:
+        return [self._paths.claude_commands_dir,
+                self._paths.claude_skills_dir,
+                self._paths.claude_workflows_dir]
+
+    def _link_component(self, base: Path, src: Path, item_name: str,
+                        link_name: str, is_dir: bool) -> List[str]:
+        """항목 하나 링크 — 이미 나를 가리키면 멱등, 남이 쓰면 접두 폴백."""
+        for candidate in (item_name, f"{link_name}-{item_name}"):
+            link = base / candidate
+            if _points_to(link, src):
+                return [f"{base.name}/{candidate}"]  # 멱등
+            if link.exists() or os.path.islink(str(link)):
+                continue  # 남이 소유 — 접두 후보로
+            base.mkdir(parents=True, exist_ok=True)
+            if self._windows and not is_dir:
+                # 파일은 junction 불가 → 하드링크 (같은 볼륨 전제,
+                # pull 후 stale — update의 resync가 해소 §6.2)
+                os.link(str(src), str(link))
+            else:
+                self._make_link(link, src, relative=True)
+            return [f"{base.name}/{candidate}"]
+        logger_name = f"{base.name}/{item_name}"
+        raise RegistryError(f"컴포넌트 링크명 충돌 해소 불가: {logger_name}")
 
     # ── 내부 ─────────────────────────────────────────────────
     def _pick_link_name(self, org: str, name: str, clone: Path) -> str:
@@ -167,6 +310,9 @@ class PluginLinks:
             return
         if self._windows and link.is_dir():
             os.rmdir(str(link))  # junction 제거 — 타깃 내용물 무손상
+            return
+        if self._windows and link.is_file():
+            os.unlink(str(link))  # 하드링크 제거 — 원본 inode 유지
             return
         raise RegistryError(
             f"링크가 아닌 경로 — 수동 확인 필요 (rmtree 금지 §6.2): {link}")

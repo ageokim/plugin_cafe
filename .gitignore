@@ -20,3 +20,6 @@ plugins/*
 # 설치 링크 (Architecture.md §6.2 — pm이 생성·관리)
 .claude/plugin_roots/
 .claude/plugins/
+.claude/commands/
+.claude/skills/
+.claude/workflows/

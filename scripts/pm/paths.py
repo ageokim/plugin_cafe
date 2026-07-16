@@ -119,6 +119,19 @@ class ProjectPaths:
         return self.claude_dir / "plugins"
 
     @property
+    def claude_commands_dir(self) -> Path:
+        """컴포넌트 링크 — Claude Code가 읽는 명령 위치 (§6.2 4단계)."""
+        return self.claude_dir / "commands"
+
+    @property
+    def claude_skills_dir(self) -> Path:
+        return self.claude_dir / "skills"
+
+    @property
+    def claude_workflows_dir(self) -> Path:
+        return self.claude_dir / "workflows"
+
+    @property
     def claude_settings_file(self) -> Path:
         """팀 공통 설정(커밋 대상) — allowlist 등 (§8.7)."""
         return self.claude_dir / "settings.json"
