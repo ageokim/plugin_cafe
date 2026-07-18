@@ -149,8 +149,8 @@ export function initSidebar(ctx) {
     if (org) {
       const rf = iconBtn("i-refresh", "재스캔", "btn ghost sm needs-auth");
       rf.addEventListener("click", () => rescanOrg(name, rf));
-      const rm = iconBtn("i-x", "org 제거 (설치본은 유지)", "btn ghost sm needs-auth");
-      rm.addEventListener("click", () => removeOrg(name));
+      const rm = iconBtn("i-x", "org 제거 (설치본 포함 삭제)", "btn ghost sm needs-auth");
+      rm.addEventListener("click", () => confirmRemoveOrg(name, sp, rf, rm));
       sp.append(rf, rm);
     }
     h.appendChild(sp);
@@ -241,6 +241,19 @@ export function initSidebar(ctx) {
       btn.disabled = false;
       btn.classList.remove("busy");
     }
+  }
+
+  function confirmRemoveOrg(name, sp, rf, rm) {
+    const installed = plugins.filter(
+      (p) => p.org === name && p.state !== "available").length;
+    sp.textContent = "";
+    sp.appendChild(el("span", "confirm",
+      installed ? `설치본 ${installed}개 포함 삭제할까요?` : "org를 삭제할까요?"));
+    const yes = textBtn("삭제", "btn sm dangerp");
+    yes.addEventListener("click", () => removeOrg(name));
+    const no = textBtn("취소", "btn ghost sm");
+    no.addEventListener("click", () => { sp.textContent = ""; sp.append(rf, rm); });
+    sp.append(yes, no);
   }
 
   async function removeOrg(name) {

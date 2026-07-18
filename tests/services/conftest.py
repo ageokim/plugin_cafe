@@ -145,14 +145,15 @@ class ServicesEnv:
 
         def now():
             return FIXED_NOW
+        self.install_service = InstallService(paths, self.git,
+                                              self.registry, self.links)
         self.org_service = OrgService(self.config, self.config_store,
                                       self.orgs_store, factory, self.auth,
-                                      now_factory=now)
+                                      now_factory=now,
+                                      installer=self.install_service)
         self.catalog_service = CatalogService(self.config, self.catalog_store,
                                               self.org_service, factory,
                                               self.auth, now_factory=now)
-        self.install_service = InstallService(paths, self.git,
-                                              self.registry, self.links)
         self.activation_service = ActivationService(self.registry, paths,
                                                     self.links)
         self.inspect_service = InspectService(paths, self.registry,

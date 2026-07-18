@@ -81,14 +81,15 @@ class Container:
         )
 
         # --- services (§4) ---
+        self.install_service = InstallService(self.paths, self.git,
+                                              self.registry, self.links)
         self.org_service = OrgService(self.config, self.config_store,
                                       self.orgs_store, self.github_client,
-                                      self.auth)
+                                      self.auth,
+                                      installer=self.install_service)
         self.catalog_service = CatalogService(self.config, self.catalog_store,
                                               self.org_service,
                                               self.github_client, self.auth)
-        self.install_service = InstallService(self.paths, self.git,
-                                              self.registry, self.links)
         self.activation_service = ActivationService(self.registry, self.paths,
                                                     self.links)
         self.inspect_service = InspectService(self.paths, self.registry,

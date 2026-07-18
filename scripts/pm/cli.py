@@ -199,9 +199,8 @@ def _cmd_org(container: Any, args: argparse.Namespace) -> int:
                 mark = "ok" if row["authorized"] else "권한 없음"
                 print(f"{row['name']:<20} {mark:<8} {row['url']}")
         return 0
-    container.org_service.remove(args.org)
-    print(f"등록 해제됨: {args.org} — 설치본은 유지되며 '미등록 org'로 "
-          "계속 관리됩니다 (§12.2)")
+    removed = container.org_service.remove(args.org)
+    print(f"등록 해제됨: {args.org} — 설치된 플러그인 {removed}개 함께 삭제")
     return 0
 
 

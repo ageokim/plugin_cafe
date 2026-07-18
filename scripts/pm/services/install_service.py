@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Tuple
+from typing import Tuple, List
 
 from pm.claudeplug.links import PluginLinks
 from pm.claudeplug.registry import (ClaudePluginRegistry, detect_profile,
@@ -100,6 +100,13 @@ class InstallService:
                              or plugin.name,
                              enabled=enable, warnings=warnings,
                              profile=profile)
+
+    def installed_names(self, org: str) -> "List[str]":
+        """org의 설치본(clone) 이름 목록 — 파일시스템 실측 (§6.4)."""
+        org_dir = self._paths.plugins_dir / org
+        if not org_dir.is_dir():
+            return []
+        return sorted(d.name for d in org_dir.iterdir() if d.is_dir())
 
     def uninstall(self, org: str, name: str) -> None:
         """링크 제거 → (native면 등록 해제) → clone 삭제 (§6.2 순서).

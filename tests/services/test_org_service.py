@@ -91,11 +91,29 @@ def test_add_without_login_raises(env):
         env.org_service.add("org-a")
 
 
-def test_remove_keeps_everything_else(env):
+def test_remove_keeps_other_orgs(env):
     env.login_and_register_org("org-a")
     env.register_extra_org("org-b")
-    env.org_service.remove("org-a")
+    assert env.org_service.remove("org-a") == 0  # 설치본 없음
     assert [o.name for o in env.org_service.list_orgs()] == ["org-b"]
+
+
+def test_remove_deletes_installed_clones(env):
+    """org 제거 = 그 org의 설치본(clone·링크·활성)까지 함께 정리 (§12.2)."""
+    env.login_and_register_org("org-a")
+    env.register_extra_org("org-b")
+    env.install_service.install(env.catalog_plugin("org-a", "plugin-a"))
+    env.install_service.install(env.catalog_plugin("org-a", "plugin-c"))
+    env.install_service.install(env.catalog_plugin("org-b", "plugin-x"))
+
+    assert env.org_service.remove("org-a") == 2
+    assert not env.paths.plugin_clone_dir("org-a", "plugin-a").exists()
+    assert not env.paths.plugin_clone_dir("org-a", "plugin-c").exists()
+    # 다른 org 설치본은 무영향
+    assert env.paths.plugin_clone_dir("org-b", "plugin-x").is_dir()
+    from pm.models import PluginState
+    assert env.activation_service.state(
+        "org-b", "plugin-x") is PluginState.ENABLED
 
 
 def test_remove_missing_raises(env):

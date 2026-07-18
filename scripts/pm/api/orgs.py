@@ -39,11 +39,11 @@ def make_orgs_bp(org_service: Any, catalog_service: Any) -> Blueprint:
 
     @bp.delete("/orgs/<name>")
     def remove_org(name: str):
-        org_service.remove(name)
+        removed = org_service.remove(name)
         return jsonify({
             "ok": True,
-            "note": "설치본은 유지되며 '미등록 org' 그룹으로 계속 "
-                    "관리됩니다 (§12.2)",
+            "removed_plugins": removed,
+            "note": f"설치된 플러그인 {removed}개 함께 삭제됨 (§12.2)",
         })
 
     return bp

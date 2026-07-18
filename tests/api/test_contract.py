@@ -78,10 +78,12 @@ def test_org_add_membership_denied_routes_400(client, container):
     assert res.status_code == 400  # 인라인 표시 — 세션 유지 (§10.2)
 
 
-def test_org_remove_notes_orphans(client, container):
+def test_org_remove_deletes_installs(client, container):
     res = client.delete("/api/orgs/org-a")
     assert res.status_code == 200
-    assert "미등록 org" in res.get_json()["note"]
+    body = res.get_json()
+    assert body["removed_plugins"] == 2  # 설치본 함께 삭제 (§12.2)
+    assert "함께 삭제" in body["note"]
     assert container.org_service.removed == ["org-a"]
 
 

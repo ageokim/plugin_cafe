@@ -53,10 +53,12 @@ def test_repair_prunes_stale_enabled_keys(env):
 
 
 def test_unregistered_org_flagged(env):
+    """'미등록' 플래그는 비정상 잔존(크래시 잔재) 안전망 — 정상 org 제거는
+    설치본까지 지우므로(§12.2) orgs.json만 직접 소실시켜 재현한다."""
     env.login_and_register_org("org-a")
     plugin = env.catalog_plugin("org-a", "plugin-a")
     env.install_service.install(plugin)
-    env.org_service.remove("org-a")  # 설치본은 유지 (§12.2)
+    env.orgs_store.write({"orgs": []})  # 크래시로 등록만 사라진 상황
     status = _status(env, "org-a", "plugin-a")
     assert status.state is PluginState.ENABLED  # 여전히 관리 가능
     assert any("미등록 org" in issue for issue in status.issues)
