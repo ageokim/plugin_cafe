@@ -137,6 +137,27 @@ class PresetService:
         self._replace(updated)
         return updated
 
+    def remove_members_of_org(self, org: str) -> int:
+        """org 삭제 경로의 멤버 정리 (§12.2) — 해당 org의 멤버를 전
+        preset에서 제거하고 제거된 멤버 수를 반환. preset 정의 자체는
+        비워져도 유지한다(정의 삭제는 별개 동작 §6.5).
+
+        일반적인 '깨진 참조'는 자동 삭제하지 않지만(§6.5 — 일시 상태일
+        수 있음), org 삭제는 사용자가 확인한 명시적 파괴 동작이므로
+        참조도 함께 정리한다.
+        """
+        prefix = f"{org}/"
+        removed = 0
+        for preset in self.list_presets():
+            kept = tuple(m for m in preset.members
+                         if not m.startswith(prefix))
+            if len(kept) == len(preset.members):
+                continue
+            removed += len(preset.members) - len(kept)
+            self._replace(Preset(name=preset.name, members=kept,
+                                 created_at=preset.created_at))
+        return removed
+
     # --- 상태 뱃지 (§6.5 실측 도출) ---
 
     def badge(self, name: str) -> PresetBadge:

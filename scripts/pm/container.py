@@ -86,7 +86,10 @@ class Container:
         self.org_service = OrgService(self.config, self.config_store,
                                       self.orgs_store, self.github_client,
                                       self.auth,
-                                      installer=self.install_service)
+                                      installer=self.install_service,
+                                      preset_pruner=lambda org:
+                                      self.preset_service
+                                      .remove_members_of_org(org))
         self.catalog_service = CatalogService(self.config, self.catalog_store,
                                               self.org_service,
                                               self.github_client, self.auth)

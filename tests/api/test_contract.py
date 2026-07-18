@@ -83,7 +83,8 @@ def test_org_remove_deletes_installs(client, container):
     assert res.status_code == 200
     body = res.get_json()
     assert body["removed_plugins"] == 2  # 설치본 함께 삭제 (§12.2)
-    assert "함께 삭제" in body["note"]
+    assert body["removed_preset_members"] == 1  # preset 멤버 정리
+    assert "함께 삭제" in body["note"] and "preset" in body["note"]
     assert container.org_service.removed == ["org-a"]
 
 

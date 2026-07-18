@@ -150,7 +150,10 @@ class ServicesEnv:
         self.org_service = OrgService(self.config, self.config_store,
                                       self.orgs_store, factory, self.auth,
                                       now_factory=now,
-                                      installer=self.install_service)
+                                      installer=self.install_service,
+                                      preset_pruner=lambda org:
+                                      self.preset_service
+                                      .remove_members_of_org(org))
         self.catalog_service = CatalogService(self.config, self.catalog_store,
                                               self.org_service, factory,
                                               self.auth, now_factory=now)

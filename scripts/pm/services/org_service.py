@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Tuple, Callable, Dict, List, Optional
 
 from pm.config import ConfigProvider
 from pm.errors import AuthError, GitHubError, PmError
@@ -42,6 +42,7 @@ class OrgService:
         auth: AuthService,
         now_factory: Callable[[], str] = utc_now_iso,
         installer=None,
+        preset_pruner=None,
     ) -> None:
         self._config = config
         self._config_store = config_store
@@ -50,6 +51,7 @@ class OrgService:
         self._auth = auth
         self._now = now_factory
         self._installer = installer  # org 제거 시 설치본 정리 (§12.2)
+        self._preset_pruner = preset_pruner  # preset 멤버 정리 (§12.2)
 
     def list_orgs(self) -> List[Org]:
         data = self._orgs_store.read()
@@ -103,15 +105,15 @@ class OrgService:
         self._orgs_store.update(lambda data: self._append(data, org))
         return org
 
-    def remove(self, name: str) -> int:
-        """등록 해제 + 그 org의 설치본(clone) 전부 삭제 (§12.2).
+    def remove(self, name: str) -> "Tuple[int, int]":
+        """등록 해제 + 설치본 전부 삭제 + preset 멤버 정리 (§12.2).
 
         "org를 지운다 = 그 org 것을 더 안 쓴다" — 남은 설치본은 관리
         부담만 남기므로 함께 정리한다. 파괴적이므로 웹 UI는 확인 대화를
         거친다(삭제될 플러그인 수 명시).
 
         Returns:
-            함께 삭제된 설치본 수.
+            (함께 삭제된 설치본 수, preset에서 제거된 멤버 수).
 
         Raises:
             PmError: 등록되지 않은 org.
@@ -129,7 +131,9 @@ class OrgService:
             for plugin_name in self._installer.installed_names(name):
                 self._installer.uninstall(name, plugin_name)
                 removed += 1
-        return removed
+        pruned = (self._preset_pruner(name)
+                  if self._preset_pruner is not None else 0)
+        return removed, pruned
 
     def revalidate_all(self) -> Dict[str, bool]:
         """매 시작 시 전 org 재검증 (§10.2) — {org명: 권한 유지 여부}.

@@ -199,8 +199,11 @@ def _cmd_org(container: Any, args: argparse.Namespace) -> int:
                 mark = "ok" if row["authorized"] else "권한 없음"
                 print(f"{row['name']:<20} {mark:<8} {row['url']}")
         return 0
-    removed = container.org_service.remove(args.org)
-    print(f"등록 해제됨: {args.org} — 설치된 플러그인 {removed}개 함께 삭제")
+    removed, pruned = container.org_service.remove(args.org)
+    line = f"등록 해제됨: {args.org} — 설치된 플러그인 {removed}개 함께 삭제"
+    if pruned:
+        line += f", preset 멤버 {pruned}개 정리"
+    print(line)
     return 0
 
 

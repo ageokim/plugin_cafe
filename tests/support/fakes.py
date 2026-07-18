@@ -108,9 +108,9 @@ class FakeOrgService:
     def list_orgs(self) -> List[Org]:
         return list(self.orgs)
 
-    def remove(self, name: str) -> int:
+    def remove(self, name: str):
         self.removed.append(name)
-        return 2  # 함께 삭제된 설치본 수 (§12.2)
+        return 2, 1  # (설치본, preset 멤버) 함께 정리 수 (§12.2)
 
     def revalidate_all(self) -> Dict[str, bool]:
         return {org.name: True for org in self.orgs}

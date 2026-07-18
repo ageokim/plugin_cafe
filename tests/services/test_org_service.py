@@ -94,7 +94,7 @@ def test_add_without_login_raises(env):
 def test_remove_keeps_other_orgs(env):
     env.login_and_register_org("org-a")
     env.register_extra_org("org-b")
-    assert env.org_service.remove("org-a") == 0  # 설치본 없음
+    assert env.org_service.remove("org-a") == (0, 0)  # 설치본·preset 없음
     assert [o.name for o in env.org_service.list_orgs()] == ["org-b"]
 
 
@@ -106,7 +106,7 @@ def test_remove_deletes_installed_clones(env):
     env.install_service.install(env.catalog_plugin("org-a", "plugin-c"))
     env.install_service.install(env.catalog_plugin("org-b", "plugin-x"))
 
-    assert env.org_service.remove("org-a") == 2
+    assert env.org_service.remove("org-a") == (2, 0)
     assert not env.paths.plugin_clone_dir("org-a", "plugin-a").exists()
     assert not env.paths.plugin_clone_dir("org-a", "plugin-c").exists()
     # 다른 org 설치본은 무영향
@@ -114,6 +114,20 @@ def test_remove_deletes_installed_clones(env):
     from pm.models import PluginState
     assert env.activation_service.state(
         "org-b", "plugin-x") is PluginState.ENABLED
+
+
+def test_remove_prunes_preset_members(env):
+    """org 삭제 시 preset에서 그 org 멤버가 빠진다 — 정의는 유지 (§12.2)."""
+    env.login_and_register_org("org-a")
+    env.register_extra_org("org-b")
+    env.install_service.install(env.catalog_plugin("org-a", "plugin-a"))
+    env.preset_service.create("세트")
+    env.preset_service.add_member("세트", "org-a/plugin-a")
+    env.preset_service.add_member("세트", "org-b/plugin-x")
+
+    assert env.org_service.remove("org-a") == (1, 1)
+    preset = env.preset_service.get("세트")
+    assert preset.members == ("org-b/plugin-x",)  # 타 org 멤버는 유지
 
 
 def test_remove_missing_raises(env):

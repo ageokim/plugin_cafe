@@ -39,11 +39,15 @@ def make_orgs_bp(org_service: Any, catalog_service: Any) -> Blueprint:
 
     @bp.delete("/orgs/<name>")
     def remove_org(name: str):
-        removed = org_service.remove(name)
+        removed, pruned = org_service.remove(name)
+        note = f"설치된 플러그인 {removed}개 함께 삭제됨"
+        if pruned:
+            note += f" · preset 멤버 {pruned}개 정리됨"
         return jsonify({
             "ok": True,
             "removed_plugins": removed,
-            "note": f"설치된 플러그인 {removed}개 함께 삭제됨 (§12.2)",
+            "removed_preset_members": pruned,
+            "note": note + " (§12.2)",
         })
 
     return bp
