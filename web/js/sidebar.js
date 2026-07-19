@@ -482,6 +482,39 @@ export function initSidebar(ctx) {
     apply();
   }
 
+  // ── 폭 조절 (§12.2) — 오른쪽 가장자리 드래그, localStorage 저장 ──
+  function initResize() {
+    const sb = $("sb");
+    const handle = $("sbResize");
+    const DEFAULT_W = 360;
+    const MIN_W = 280;
+    const maxW = () => Math.min(640, Math.round(window.innerWidth * 0.6));
+    const clamp = (w) => Math.min(Math.max(w, MIN_W), maxW());
+    let width = parseInt(localStorage.getItem("pm.sbw"), 10) || DEFAULT_W;
+    const apply = () => document.documentElement.style
+      .setProperty("--sbw", clamp(width) + "px");
+    apply();
+    handle.addEventListener("mousedown", (e) => {
+      e.preventDefault(); // 드래그 중 텍스트 선택 방지
+      document.body.classList.add("sb-resizing");
+      const left = sb.getBoundingClientRect().left;
+      const move = (ev) => { width = clamp(ev.clientX - left); apply(); };
+      const up = () => {
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", up);
+        document.body.classList.remove("sb-resizing");
+        localStorage.setItem("pm.sbw", String(clamp(width)));
+      };
+      document.addEventListener("mousemove", move);
+      document.addEventListener("mouseup", up);
+    });
+    handle.addEventListener("dblclick", () => { // 기본 폭 복원
+      width = DEFAULT_W;
+      apply();
+      localStorage.removeItem("pm.sbw");
+    });
+  }
+
   // ── 이벤트 결선 ──
   // ── org 추가 팝오버 (§12.2): 아이콘 클릭 ↔ 열기, 바깥 클릭/Esc ↔ 닫기 ──
   function closeOrgPop() {
@@ -538,6 +571,7 @@ export function initSidebar(ctx) {
     if ($("inspectBox").open) loadInspect();
   });
   initPin();
+  initResize();
 
   return { refreshAll };
 }

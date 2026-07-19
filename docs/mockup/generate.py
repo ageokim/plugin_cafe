@@ -137,6 +137,31 @@ DEMO_JS = """
     if (!pinned) hideTimer = setTimeout(() => sb.classList.remove("open"), 300);
   });
 
+  // 사이드바 폭 조절 — 실구현(sidebar.js initResize)과 동일 데모 (§12.2)
+  const sbResize = document.getElementById("sbResize");
+  let sbw = 360;
+  sbResize.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    document.body.classList.add("sb-resizing");
+    const left = sb.getBoundingClientRect().left;
+    const move = (ev) => {
+      sbw = Math.min(Math.max(ev.clientX - left, 280),
+                     Math.min(640, window.innerWidth * 0.6));
+      document.documentElement.style.setProperty("--sbw", sbw + "px");
+    };
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      document.body.classList.remove("sb-resizing");
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  });
+  sbResize.addEventListener("dblclick", () => {
+    sbw = 360;
+    document.documentElement.style.setProperty("--sbw", "360px");
+  });
+
   // org 추가 팝오버 (§12.2) — 실구현과 동일한 열림/닫힘 데모
   const orgPop = document.getElementById("orgPop");
   const orgFab = document.getElementById("orgFab");

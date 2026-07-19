@@ -90,7 +90,15 @@ body.pm-locked .needs-auth { opacity:.4; pointer-events:none; }
 .sidebar { width:var(--sbw); min-width:var(--sbw); background:rgba(255,253,248,.8);
            backdrop-filter:blur(10px); border-right:1px solid var(--line);
            display:flex; flex-direction:column; transition:transform .24s cubic-bezier(.4,0,.2,1);
-           z-index:20; }
+           z-index:20; position:relative; }
+
+/* 폭 조절 핸들 — 오른쪽 가장자리 드래그 (§12.2) */
+.sb-resize { position:absolute; top:0; bottom:0; right:-4px; width:8px;
+             cursor:col-resize; z-index:25; }
+.sb-resize:hover, body.sb-resizing .sb-resize {
+  background:linear-gradient(90deg, transparent, rgba(192,138,82,.4), transparent); }
+body.sb-resizing { cursor:col-resize; user-select:none; }
+body.sb-resizing .sidebar { transition:none; }
 .sb-head { display:flex; align-items:center; gap:8px; padding:12px 14px;
            border-bottom:1px solid var(--line); }
 .sb-head h3 { display:flex; align-items:center; gap:8px; font-size:.85rem;
@@ -592,6 +600,7 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
           <div id="inspectBody" style="padding-top:8px">org-a/plugin-a: clone ✓ 등록 ✓ 활성 ✓ · org-b/plugin-x: 업데이트 있음</div>
         </details>
       </div>
+      <div class="sb-resize" id="sbResize" title="드래그로 폭 조절 · 더블클릭 = 기본 폭"></div>
     </aside>
 
     <!-- ▶ 메인: 탭 전환 (Claude ↔ 터미널) -->
@@ -705,6 +714,31 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
   sb.addEventListener("mouseenter", () => clearTimeout(hideTimer));
   sb.addEventListener("mouseleave", () => {
     if (!pinned) hideTimer = setTimeout(() => sb.classList.remove("open"), 300);
+  });
+
+  // 사이드바 폭 조절 — 실구현(sidebar.js initResize)과 동일 데모 (§12.2)
+  const sbResize = document.getElementById("sbResize");
+  let sbw = 360;
+  sbResize.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    document.body.classList.add("sb-resizing");
+    const left = sb.getBoundingClientRect().left;
+    const move = (ev) => {
+      sbw = Math.min(Math.max(ev.clientX - left, 280),
+                     Math.min(640, window.innerWidth * 0.6));
+      document.documentElement.style.setProperty("--sbw", sbw + "px");
+    };
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      document.body.classList.remove("sb-resizing");
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  });
+  sbResize.addEventListener("dblclick", () => {
+    sbw = 360;
+    document.documentElement.style.setProperty("--sbw", "360px");
   });
 
   // org 추가 팝오버 (§12.2) — 실구현과 동일한 열림/닫힘 데모

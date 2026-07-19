@@ -90,7 +90,15 @@ body.pm-locked .needs-auth { opacity:.4; pointer-events:none; }
 .sidebar { width:var(--sbw); min-width:var(--sbw); background:rgba(255,253,248,.8);
            backdrop-filter:blur(10px); border-right:1px solid var(--line);
            display:flex; flex-direction:column; transition:transform .24s cubic-bezier(.4,0,.2,1);
-           z-index:20; }
+           z-index:20; position:relative; }
+
+/* 폭 조절 핸들 — 오른쪽 가장자리 드래그 (§12.2) */
+.sb-resize { position:absolute; top:0; bottom:0; right:-4px; width:8px;
+             cursor:col-resize; z-index:25; }
+.sb-resize:hover, body.sb-resizing .sb-resize {
+  background:linear-gradient(90deg, transparent, rgba(192,138,82,.4), transparent); }
+body.sb-resizing { cursor:col-resize; user-select:none; }
+body.sb-resizing .sidebar { transition:none; }
 .sb-head { display:flex; align-items:center; gap:8px; padding:12px 14px;
            border-bottom:1px solid var(--line); }
 .sb-head h3 { display:flex; align-items:center; gap:8px; font-size:.85rem;
