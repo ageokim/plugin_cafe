@@ -93,9 +93,9 @@ flowchart LR
 │  ID    [ ageokim                  ]  │
 │  PWD   [ ●●●●●●●●●●  (PAT)       ]  │
 │                                      │
-│            [ 입장하기 ]              │
+│            [ 로그인 ]                │
 │                                      │
-│  · 입장하면 자동 저장되어 다음부터  │
+│  · 로그인하면 자동 저장되어 다음부터  │
 │    이 창 없이 바로 시작됩니다        │
 └──────────────────────────────────────┘
 ```
@@ -112,15 +112,15 @@ flowchart LR
 ```
 챗 입력줄 (전송 버튼 왼쪽 ☕ 아이콘 클릭 시 위로 팝오버):
         ┌──────────────────────────────────────┐
-        │ ☕ ORGANIZATION 추가 — 원두를 담아요  │
+        │ ☕ ORGANIZATION 추가                  │
         │ [ https://github.xxx.xxx/org-b   ][+] │
         └──────────────────────────────────────┘
 [☕] [ claude에게 메시지…                ] [▶]
  ↑ 바깥 클릭/Esc 하면 아이콘으로 접힘
 
-사이드바 (등록된 org 레시피 카드):
-│ ▽ org-a  재료 3가지 RECIPE  🔄 ✕    │
-│ ▽ org-b  재료 5가지 RECIPE  🔄 ✕ ←추가│
+사이드바 (등록된 org 카드):
+│ ▽ org-a (3)          🔄 ✕           │
+│ ▽ org-b (5)          🔄 ✕   ← 추가됨│
 ```
 
 ```mermaid
@@ -150,10 +150,10 @@ sequenceDiagram
     SB->>GH: repo 목록 조회 (org별)
     GH-->>SB: #plugin #release 붙은 repo들
     SB-->>U: ② org별 그룹으로 목록 표시
-    U->>SB: ③ plugin-x [담기] 클릭
+    U->>SB: ③ plugin-x [설치] 클릭
     SB->>GH: git clone → plugins/org-b/plugin-x
     SB->>CL: 링크 생성 (.claude/plugin_roots 등)<br>plugin.json 있으면 등록도 병행
-    SB-->>U: ④ 배지가 재료 없음 → 추출중으로 변경
+    SB-->>U: ④ 배지가 미설치 → 사용중으로 변경
 ```
 
 - 목록에는 검색창 + 상태 필터 칩(🟢/🟡/⚪) — 많아져도 페이지 넘김 없이 검색·스크롤.
@@ -237,11 +237,11 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    Available: ⚪ 재료 없음 (org에 존재)
-    Installed: 🟡 보관중 (내 PC에 있음)
-    Enabled: 🟢 추출중 (claude가 사용)
+    Available: ⚪ 미설치 (org에 존재)
+    Installed: 🟡 꺼짐 (내 PC에 있음)
+    Enabled: 🟢 사용중 (claude가 사용)
 
-    Available --> Enabled : 담기 클릭
+    Available --> Enabled : 설치 클릭
     Enabled --> Installed : 끄기 클릭
     Installed --> Enabled : 켜기 클릭
     Installed --> Available : 삭제 (확인 후)
@@ -250,13 +250,13 @@ stateDiagram-v2
 
 | 버튼 (내부명) | 일어나는 일 | 이후 claude에서 |
 |---|---|---|
-| 담기 (install) | 다운로드 + 링크 생성(켜기) | standalone 즉시 · native skill은 새 세션부터 |
+| 설치 (install) | 다운로드 + 링크 생성(켜기) | standalone 즉시 · native skill은 새 세션부터 |
 | 끄기 (disable) | 링크 제거 (파일은 유지) | standalone 즉시 · native는 새 세션부터 |
 | 켜기 (enable) | 링크 재생성으로 다시 켜기 | 새 세션부터 (plugin의 경로 참조는 즉시 §6.2) |
-| 🗑 삭제 (uninstall) | **"삭제할까요?" 인라인 확인 후** 끄기 + 등록 해제 + 파일 삭제 → 행이 '재료 없음'으로 복귀 | 안 보임 |
+| 🗑 삭제 (uninstall) | **"삭제할까요?" 인라인 확인 후** 끄기 + 등록 해제 + 파일 삭제 → 행이 '미설치'로 복귀 | 안 보임 |
 | 업데이트 (update) | 새 버전 받아 재등록 (켜짐/꺼짐 상태는 그대로) | 새 세션부터 새 버전 |
 
-> 재료 없음/보관중/추출중은 화면 표시명(카페 카피)이고, 내부 상태명(Available/Installed/Enabled)과
+> 미설치/꺼짐/사용중은 화면 표시명이고, 내부 상태명(Available/Installed/Enabled)과
 > CLI 출력은 영문이다 (Architecture §12.2).
 
 - **Inspect**를 열면 각 플러그인의 실제 상태(파일 존재·등록·켜짐, 버전 차이)를 표로 확인 — 뭔가 이상할 때 여기부터 본다.
@@ -270,7 +270,7 @@ stateDiagram-v2
 ```
 사이드바 Preset 섹션:
 ┌─────────────────────────────────────────┐
-│ ☰ TODAY'S PRESET — 나만의 메뉴 [+ 새 preset]│
+│ ☰ PRESET — 나만의 세트      [+ 새 preset]│
 │  ● 코드리뷰 세트 (3)      [전환] ⋯      │  ← ● 전부 켜짐
 │  ○ 문서작업 세트 (2)      [전환] ⋯      │  ← ○ 꺼져 있음
 └─────────────────────────────────────────┘
@@ -291,9 +291,9 @@ flowchart LR
 
 | 동작 | 결과 |
 |---|---|
-| 일괄 켜기 | 멤버 전부 켜짐 — **재료 없음(미설치) 멤버는 자동으로 담기까지** 하고 켠다 |
+| 일괄 켜기 | 멤버 전부 켜짐 — **미설치 멤버는 자동으로 설치까지** 하고 켠다 |
 | 일괄 끄기 | 멤버 전부 꺼짐 (파일 유지) |
-| 일괄 삭제 | 인라인 확인 후 멤버 전부 삭제 → 각 행이 '재료 없음'으로 |
+| 일괄 삭제 | 인라인 확인 후 멤버 전부 삭제 → 각 행이 '미설치'로 |
 | **[전환]** | **멤버만 켜고, 멤버가 아닌 설치본은 전부 끔** — "코드리뷰 세트" ↔ "문서작업 세트"를 작업 모드처럼 갈아탐 (삭제는 안 함) |
 
 ```mermaid

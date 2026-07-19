@@ -106,8 +106,8 @@
   <!-- 로그인 전이라 뒤 화면은 잠겨서 흐릿하게만 보임 -->
   <div class="locked-bg">
     <div class="side">
-      <div class="box menu">TODAY'S PRESET — 나만의 메뉴 …</div>
-      <div class="box">RECIPE — plugin ● 추출중</div>
+      <div class="box menu">PRESET — 나만의 세트 …</div>
+      <div class="box">plugin ● 사용중</div>
     </div>
     <div class="mainp"><div class="box tall">Claude · 터미널 …</div></div>
   </div>
@@ -116,7 +116,7 @@
     <form class="login-card" id="loginForm">
       <div class="mark"><svg class="ic"><use href="#i-cup"/></svg></div>
       <h2>Plugin Cafe</h2>
-      <div class="sub">GitHub 계정으로 입장하기</div>
+      <div class="sub">GitHub 계정으로 로그인</div>
 
       <div class="field">
         <label for="loginId">ID</label>
@@ -135,11 +135,11 @@
       </div>
 
       <div class="login-err" id="loginErr" hidden></div>
-      <button class="btn-login" type="submit" id="loginBtn"><svg class="ic"><use href="#i-door"/></svg>입장하기</button>
+      <button class="btn-login" type="submit" id="loginBtn"><svg class="ic"><use href="#i-door"/></svg>로그인</button>
 
       <div class="note">
-        입장하면 <b>자동 저장</b>되어 다음부터 이 창 없이 바로 시작됩니다<br>
-        organization 주소는 입장 후 <b>챗 입력줄의 ☕ 아이콘</b>으로 추가합니다
+        로그인하면 <b>자동 저장</b>되어 다음부터 이 창 없이 바로 시작됩니다<br>
+        organization 주소는 로그인 후 <b>챗 입력줄의 ☕ 아이콘</b>으로 추가합니다
       </div>
     </form>
   </div>
@@ -176,7 +176,7 @@
         </div>
 
         <div class="sb-sec">
-          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-board"/></svg>TODAY'S PRESET — 나만의 메뉴
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-board"/></svg>PRESET — 나만의 세트
             <button class="btn ghost sm needs-auth" id="presetNewBtn" type="button" title="새 preset" style="margin-left:auto"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button>
           </div>
           <div class="orgadd" id="presetNewRow" hidden>
@@ -187,7 +187,7 @@
         </div>
 
         <div class="sb-sec recipe-t">
-          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-dripper"/></svg>RECIPE — org별 원두 레시피</div>
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-dripper"/></svg>ORG별 플러그인</div>
         </div>
         <div id="pluginList"></div>
 
@@ -218,17 +218,17 @@
           <!-- org 추가 — 전송 버튼 왼쪽 아이콘, 클릭 시 팝오버 (§12.2) -->
           <div class="org-fab-wrap" id="orgFabWrap">
             <div class="org-pop" id="orgPop" hidden>
-              <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-grounds"/></svg>ORGANIZATION 추가 — 원두(org)를 포터필터에 담아요 (권한 필요)</div>
+              <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-grounds"/></svg>ORGANIZATION 추가 — 권한 있어야 등록됨</div>
               <div class="orgadd">
                 <input id="orgUrl" placeholder="https://github.xxx.xxx/org-name">
                 <button class="addbtn" id="orgAddBtn" type="button" title="org 추가"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
               </div>
               <div class="inline-err" id="orgErr" hidden></div>
             </div>
-            <button class="org-fab" id="orgFab" type="button" title="organization 추가 — 커피가루 담기"><svg class="ic"><use href="#i-grounds"/></svg></button>
+            <button class="org-fab" id="orgFab" type="button" title="organization 추가"><svg class="ic"><use href="#i-grounds"/></svg></button>
           </div>
           <input id="chatIn" placeholder="claude에게 메시지… (pm 명령도 입력 가능)">
-          <button class="sendbtn" id="sendBtn" type="button" title="전송 — 에스프레소 추출"><svg class="ic"><use href="#i-espresso"/></svg></button>
+          <button class="sendbtn" id="sendBtn" type="button" title="전송"><svg class="ic"><use href="#i-espresso"/></svg></button>
         </div>
       </div>
 

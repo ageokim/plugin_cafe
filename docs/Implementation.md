@@ -142,7 +142,7 @@
 
 - [x] `web/vendor/xterm/` — xterm.js 로컬 동봉 (CDN 금지 §13.2)
 - [x] `web/index.html` — 단일 페이지: 로그인 뷰 ↔ 메인 뷰(사이드바+챗+터미널). 디자인·동작은 [mockup/main.html](mockup/main.html)·[mockup/login.html](mockup/login.html) 이식 (§12.1·12.2)
-- [x] `web/css/style.css` — 사이드바 고정/미고정, 탭 전환, 한국어 상태 라벨(추출중/보관중/재료 없음 — 2026-07 카페 테마 교체 §12.1, 폰트는 web/vendor/fonts/ 동봉), preset 메뉴판 (§12.2)
+- [x] `web/css/style.css` — 사이드바 고정/미고정, 탭 전환, 한국어 상태 라벨(사용중/꺼짐/미설치 — 카페 컨셉은 §12.1 비주얼만, 폰트는 web/vendor/fonts/ 동봉), preset 보드 (§12.2)
 - [x] `web/js/app.js` — 세션 확인→뷰 라우팅, heartbeat 시작, `sendBeacon` tab-close (§12.5)
 - [x] `web/js/sidebar.js` — org 추가/삭제, 검색+칩, 플러그인 액션(삭제는 인라인 확인), preset 렌더·일괄 액션 (§12.2)
 - [x] `web/js/chat.js` — SSE 수신 렌더, [새 대화], "새 대화부터 적용" 안내 (§12.3)

@@ -46,9 +46,9 @@ FILL = {
       '<span>github.xxx.xxx · </span><b>ageokim</b> <span style="color:var(--dim)">(자동 로그인)</span>',
   '<div class="chips" id="chips"></div>': '''<div class="chips" id="chips">
             <span class="chip on">전체 8</span>
-            <span class="chip"><span class="d enabled"></span>추출중 3</span>
-            <span class="chip"><span class="d installed"></span>보관중 1</span>
-            <span class="chip"><span class="d available"></span>재료 없음 4</span>
+            <span class="chip"><span class="d enabled"></span>사용중 3</span>
+            <span class="chip"><span class="d installed"></span>꺼짐 1</span>
+            <span class="chip"><span class="d available"></span>미설치 4</span>
           </div>''',
   '<div id="presetList"></div>': '''<div id="presetList"><div class="menu-board">
             <div class="preset"><span class="pd on"></span><span class="nm">코드리뷰 세트</span><span class="lead"></span><span class="n">3개 · 전부 켜짐</span><button class="btn sm primary">전환</button><button class="btn ghost sm">⋯</button></div>
@@ -57,23 +57,23 @@ FILL = {
           </div></div>''',
   '<div id="pluginList"></div>': '''<div id="pluginList">
           <div class="org-card">
-          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-a</span> <span class="n">재료 3가지 · 2가지 준비됨</span><span class="tag recipe">RECIPE</span>
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-a</span> <span class="n">3개</span>
             <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-a</span><span class="lead"></span><span class="desc">코드 리뷰 자동화</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>추출중</span><span class="acts"><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-b</span><span class="lead"></span><span class="desc">API 클라이언트 생성</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st off"><span class="d"></span>보관중</span><span class="acts"><button class="btn ghost sm">켜기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-c</span><span class="lead"></span><span class="desc">문서 템플릿</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>재료 없음</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>담기</button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-a</span><span class="lead"></span><span class="desc">코드 리뷰 자동화</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-b</span><span class="lead"></span><span class="desc">API 클라이언트 생성</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st off"><span class="d"></span>꺼짐</span><span class="acts"><button class="btn ghost sm">켜기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-c</span><span class="lead"></span><span class="desc">문서 템플릿</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
           </div>
           <div class="org-card tint-1">
-          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-b</span> <span class="n">재료 5가지 · 1가지 준비됨</span><span class="tag recipe">RECIPE</span>
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-b</span> <span class="n">5개</span>
             <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-x</span><span class="lead"></span><span class="desc">로그 분석 workflow</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>추출중</span><span class="acts"><button class="btn ghost sm" title="업데이트 (새 버전 있음)"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-y</span><span class="lead"></span><span class="desc">보안 점검 skill</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>재료 없음</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>담기</button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-x</span><span class="lead"></span><span class="desc">로그 분석 workflow</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm" title="업데이트 (새 버전 있음)"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-y</span><span class="lead"></span><span class="desc">보안 점검 skill</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
           </div>
         </div>''',
   '<div id="inspectBody"></div>':
       '<div id="inspectBody" style="padding-top:8px">org-a/plugin-a: clone ✓ 등록 ✓ 활성 ✓ · org-b/plugin-x: 업데이트 있음</div>',
   '<div class="msgs" id="msgs"></div>': '''<div class="msgs" id="msgs">
-          <div class="msg sys">☕ 새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다</div>
+          <div class="msg sys">새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다</div>
           <div class="msg user">방금 받은 repo 코드리뷰 해줘</div>
           <div class="msg claude"><span class="skill"><svg class="ic" style="width:10px;height:10px"><use href="#i-spark"/></svg>plugin-a : code-review skill</span><br>3개 파일에서 2건의 이슈를 찾았습니다:<br>1. <b>auth.py:42</b> — 토큰 만료 검사 누락 …</div>
           <div class="msg user">1번 고쳐줘</div>
@@ -100,7 +100,7 @@ FILL = {
           </div>
         </div>''',
   '<span class="hint" id="hintTxt"></span>':
-      '<span class="hint" id="hintTxt">plugin-a 담김(설치) — 새 대화부터 적용 · cwd=plugin_market</span>',
+      '<span class="hint" id="hintTxt">plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market</span>',
 }
 
 DEMO_JS = """
@@ -223,8 +223,8 @@ def main() -> None:
         'onsubmit="location.href=\'main.html\';return false">')
     login = HEAD.format(
         title="로그인 전", css=css, mock=MOCK_CSS, sprite=sprite,
-        banner="목업 — 실구현(web/) 스냅샷 · [입장하기] 버튼 → "
-               "\"입장 후\" 화면으로 이동",
+        banner="목업 — 실구현(web/) 스냅샷 · [로그인] 버튼 → "
+               "\"로그인 후\" 화면으로 이동",
     ) + f'<section id="view-login">{view}</section>\n</body>\n</html>\n'
     (out / "login.html").write_text(login, encoding="utf-8")
 
@@ -238,8 +238,8 @@ def main() -> None:
     main_html = HEAD.format(
         title="로그인 후", css=css, mock=MOCK_CSS, sprite=sprite,
         banner="목업 — 실구현(web/) 스냅샷 · 탭(Claude/터미널/Workflow) · "
-               "전송 버튼 왼쪽 ☕(커피가루) = org 추가 팝오버 · 고정 버튼/왼쪽 호버 · "
-               "로그아웃 → 입장 화면",
+               "전송 버튼 왼쪽 ☕ 아이콘 = org 추가 팝오버 · 고정 버튼/왼쪽 호버 · "
+               "로그아웃 → 로그인 화면",
     ) + f'<section id="view-main">{view}</section>\n{DEMO_JS}\n</body>\n</html>\n'
     (out / "main.html").write_text(main_html, encoding="utf-8")
     print("docs/mockup/login.html · main.html 재생성 완료")

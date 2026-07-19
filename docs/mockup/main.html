@@ -151,7 +151,7 @@ input:focus { border-color:var(--link); }
 .chip .d.available { background:var(--dim); }
 .chip.on { background:rgba(192,138,82,.14); border-color:var(--link); color:var(--text); }
 
-/* preset 섹션 — 메뉴판 (TODAY'S PRESET, §6.5) */
+/* preset 섹션 — 대시드 보드 (§6.5) */
 .menu-board { background:#f6ead6; border:1.5px dashed #cfb391; border-radius:12px;
               padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
 .preset { display:flex; align-items:center; gap:7px; padding:6px 2px; font-size:.76rem;
@@ -168,7 +168,7 @@ input:focus { border-color:var(--link); }
 .preset .pd.partial { background:linear-gradient(135deg, var(--green) 50%, var(--dim) 50%); }
 .preset > .ic { color:var(--tan); width:13px; height:13px; }
 
-/* org 레시피 카드 (RECIPE — org별 원두 레시피, §12.2) */
+/* org 카드 — 카페 비주얼 (§12.2) */
 .sb-sec.recipe-t { border-bottom:none; padding-bottom:0; }
 .sb-sec.recipe-t .t { margin-bottom:0; }
 #pluginList { padding:10px 14px 14px; display:flex; flex-direction:column; gap:10px; }
@@ -186,10 +186,9 @@ input:focus { border-color:var(--link); }
 .org-h .n { color:var(--dim); font-weight:400; font-size:.62rem;
             font-family:"Noto Sans KR",sans-serif; }
 .org-h .sp { margin-left:auto; display:flex; }
-.tag { font-size:.6rem; font-weight:600; border:1px solid var(--tan); border-radius:999px;
-       padding:1px 7px; color:#a4693e; white-space:nowrap;
-       font-family:"Noto Sans KR",sans-serif; letter-spacing:.03em; }
-.org-card.tint-1 .tag.recipe { color:var(--sage); border-color:var(--sage); }
+.tag { font-size:.6rem; font-weight:500; border:1px solid var(--line2); border-radius:999px;
+       padding:1px 7px; color:var(--dim); white-space:nowrap;
+       font-family:"Noto Sans KR",sans-serif; }
 .tag.warn { color:var(--amber); border-color:rgba(217,164,65,.5); }
 .plugin { display:flex; align-items:center; gap:7px; padding:7px 13px;
           transition:background .12s; position:relative; }
@@ -275,7 +274,7 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
 .chat-in { display:flex; gap:9px; padding:12px 18px; border-top:1px solid var(--line);
            position:relative; align-items:center; background:rgba(255,253,248,.7); }
 
-/* ── org 추가 팝오버 (§12.2 — 전송 버튼 왼쪽 아이콘, "커피가루 담기") ── */
+/* ── org 추가 팝오버 (§12.2 — 전송 버튼 왼쪽 아이콘) ── */
 .org-fab-wrap { position:relative; flex:none; display:flex; }
 .org-fab { width:40px; height:40px; border-radius:12px; border:1px solid var(--line2);
            background:var(--panel); color:var(--muted); cursor:pointer;
@@ -526,7 +525,7 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
   <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 </svg>
-<div class="mock-banner">목업 — 실구현(web/) 스냅샷 · 탭(Claude/터미널/Workflow) · 전송 버튼 왼쪽 ☕(커피가루) = org 추가 팝오버 · 고정 버튼/왼쪽 호버 · 로그아웃 → 입장 화면</div>
+<div class="mock-banner">목업 — 실구현(web/) 스냅샷 · 탭(Claude/터미널/Workflow) · 전송 버튼 왼쪽 ☕ 아이콘 = org 추가 팝오버 · 고정 버튼/왼쪽 호버 · 로그아웃 → 로그인 화면</div>
 <section id="view-main">
   <header>
     <div class="logo"><span class="mark"><svg class="ic"><use href="#i-cup"/></svg></span>Plugin Cafe</div>
@@ -555,14 +554,14 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
           </div>
           <div class="chips" id="chips">
             <span class="chip on">전체 8</span>
-            <span class="chip"><span class="d enabled"></span>추출중 3</span>
-            <span class="chip"><span class="d installed"></span>보관중 1</span>
-            <span class="chip"><span class="d available"></span>재료 없음 4</span>
+            <span class="chip"><span class="d enabled"></span>사용중 3</span>
+            <span class="chip"><span class="d installed"></span>꺼짐 1</span>
+            <span class="chip"><span class="d available"></span>미설치 4</span>
           </div>
         </div>
 
         <div class="sb-sec">
-          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-board"/></svg>TODAY'S PRESET — 나만의 메뉴
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-board"/></svg>PRESET — 나만의 세트
             <button class="btn ghost sm needs-auth" id="presetNewBtn" type="button" title="새 preset" style="margin-left:auto"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button>
           </div>
           <div class="orgadd" id="presetNewRow" hidden>
@@ -577,21 +576,21 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
         </div>
 
         <div class="sb-sec recipe-t">
-          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-dripper"/></svg>RECIPE — org별 원두 레시피</div>
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-dripper"/></svg>ORG별 플러그인</div>
         </div>
         <div id="pluginList">
           <div class="org-card">
-          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-a</span> <span class="n">재료 3가지 · 2가지 준비됨</span><span class="tag recipe">RECIPE</span>
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-a</span> <span class="n">3개</span>
             <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-a</span><span class="lead"></span><span class="desc">코드 리뷰 자동화</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>추출중</span><span class="acts"><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-b</span><span class="lead"></span><span class="desc">API 클라이언트 생성</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st off"><span class="d"></span>보관중</span><span class="acts"><button class="btn ghost sm">켜기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-c</span><span class="lead"></span><span class="desc">문서 템플릿</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>재료 없음</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>담기</button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-a</span><span class="lead"></span><span class="desc">코드 리뷰 자동화</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-b</span><span class="lead"></span><span class="desc">API 클라이언트 생성</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st off"><span class="d"></span>꺼짐</span><span class="acts"><button class="btn ghost sm">켜기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-c</span><span class="lead"></span><span class="desc">문서 템플릿</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
           </div>
           <div class="org-card tint-1">
-          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-b</span> <span class="n">재료 5가지 · 1가지 준비됨</span><span class="tag recipe">RECIPE</span>
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-b</span> <span class="n">5개</span>
             <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-x</span><span class="lead"></span><span class="desc">로그 분석 workflow</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>추출중</span><span class="acts"><button class="btn ghost sm" title="업데이트 (새 버전 있음)"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
-          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-y</span><span class="lead"></span><span class="desc">보안 점검 skill</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>재료 없음</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>담기</button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-x</span><span class="lead"></span><span class="desc">로그 분석 workflow</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm" title="업데이트 (새 버전 있음)"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-y</span><span class="lead"></span><span class="desc">보안 점검 skill</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
           </div>
         </div>
 
@@ -612,13 +611,13 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
           <button id="tabFlow" type="button"><svg class="ic" style="width:13px;height:13px"><use href="#i-act"/></svg>Workflow</button>
         </div>
         <button class="btn sm primary needs-auth" id="actionBtn" type="button"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg><span id="actionTxt">새 대화</span></button>
-        <span class="hint" id="hintTxt">plugin-a 담김(설치) — 새 대화부터 적용 · cwd=plugin_market</span>
+        <span class="hint" id="hintTxt">plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market</span>
       </div>
 
       <!-- Claude 챗 뷰 (§12.3) -->
       <div class="view on" id="view-chat">
         <div class="msgs" id="msgs">
-          <div class="msg sys">☕ 새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다</div>
+          <div class="msg sys">새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다</div>
           <div class="msg user">방금 받은 repo 코드리뷰 해줘</div>
           <div class="msg claude"><span class="skill"><svg class="ic" style="width:10px;height:10px"><use href="#i-spark"/></svg>plugin-a : code-review skill</span><br>3개 파일에서 2건의 이슈를 찾았습니다:<br>1. <b>auth.py:42</b> — 토큰 만료 검사 누락 …</div>
           <div class="msg user">1번 고쳐줘</div>
@@ -628,17 +627,17 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
           <!-- org 추가 — 전송 버튼 왼쪽 아이콘, 클릭 시 팝오버 (§12.2) -->
           <div class="org-fab-wrap" id="orgFabWrap">
             <div class="org-pop" id="orgPop" hidden>
-              <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-grounds"/></svg>ORGANIZATION 추가 — 원두(org)를 포터필터에 담아요 (권한 필요)</div>
+              <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-grounds"/></svg>ORGANIZATION 추가 — 권한 있어야 등록됨</div>
               <div class="orgadd">
                 <input id="orgUrl" placeholder="https://github.xxx.xxx/org-name">
                 <button class="addbtn" id="orgAddBtn" type="button" title="org 추가"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
               </div>
               <div class="inline-err" id="orgErr" hidden></div>
             </div>
-            <button class="org-fab" id="orgFab" type="button" title="organization 추가 — 커피가루 담기"><svg class="ic"><use href="#i-grounds"/></svg></button>
+            <button class="org-fab" id="orgFab" type="button" title="organization 추가"><svg class="ic"><use href="#i-grounds"/></svg></button>
           </div>
           <input id="chatIn" placeholder="claude에게 메시지… (pm 명령도 입력 가능)">
-          <button class="sendbtn" id="sendBtn" type="button" title="전송 — 에스프레소 추출"><svg class="ic"><use href="#i-espresso"/></svg></button>
+          <button class="sendbtn" id="sendBtn" type="button" title="전송"><svg class="ic"><use href="#i-espresso"/></svg></button>
         </div>
       </div>
 

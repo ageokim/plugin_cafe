@@ -86,7 +86,7 @@ export function initChat(ctx) {
   function newChat() {
     sessionId = null;
     msgs.textContent = "";
-    addMsg("sys", "☕ 새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다");
+    addMsg("sys", "새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다");
   }
 
   function setEnabled(on) { // 미검증 세션 잠금 (§10.2)

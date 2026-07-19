@@ -151,7 +151,7 @@ input:focus { border-color:var(--link); }
 .chip .d.available { background:var(--dim); }
 .chip.on { background:rgba(192,138,82,.14); border-color:var(--link); color:var(--text); }
 
-/* preset 섹션 — 메뉴판 (TODAY'S PRESET, §6.5) */
+/* preset 섹션 — 대시드 보드 (§6.5) */
 .menu-board { background:#f6ead6; border:1.5px dashed #cfb391; border-radius:12px;
               padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
 .preset { display:flex; align-items:center; gap:7px; padding:6px 2px; font-size:.76rem;
@@ -168,7 +168,7 @@ input:focus { border-color:var(--link); }
 .preset .pd.partial { background:linear-gradient(135deg, var(--green) 50%, var(--dim) 50%); }
 .preset > .ic { color:var(--tan); width:13px; height:13px; }
 
-/* org 레시피 카드 (RECIPE — org별 원두 레시피, §12.2) */
+/* org 카드 — 카페 비주얼 (§12.2) */
 .sb-sec.recipe-t { border-bottom:none; padding-bottom:0; }
 .sb-sec.recipe-t .t { margin-bottom:0; }
 #pluginList { padding:10px 14px 14px; display:flex; flex-direction:column; gap:10px; }
@@ -186,10 +186,9 @@ input:focus { border-color:var(--link); }
 .org-h .n { color:var(--dim); font-weight:400; font-size:.62rem;
             font-family:"Noto Sans KR",sans-serif; }
 .org-h .sp { margin-left:auto; display:flex; }
-.tag { font-size:.6rem; font-weight:600; border:1px solid var(--tan); border-radius:999px;
-       padding:1px 7px; color:#a4693e; white-space:nowrap;
-       font-family:"Noto Sans KR",sans-serif; letter-spacing:.03em; }
-.org-card.tint-1 .tag.recipe { color:var(--sage); border-color:var(--sage); }
+.tag { font-size:.6rem; font-weight:500; border:1px solid var(--line2); border-radius:999px;
+       padding:1px 7px; color:var(--dim); white-space:nowrap;
+       font-family:"Noto Sans KR",sans-serif; }
 .tag.warn { color:var(--amber); border-color:rgba(217,164,65,.5); }
 .plugin { display:flex; align-items:center; gap:7px; padding:7px 13px;
           transition:background .12s; position:relative; }
@@ -275,7 +274,7 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
 .chat-in { display:flex; gap:9px; padding:12px 18px; border-top:1px solid var(--line);
            position:relative; align-items:center; background:rgba(255,253,248,.7); }
 
-/* ── org 추가 팝오버 (§12.2 — 전송 버튼 왼쪽 아이콘, "커피가루 담기") ── */
+/* ── org 추가 팝오버 (§12.2 — 전송 버튼 왼쪽 아이콘) ── */
 .org-fab-wrap { position:relative; flex:none; display:flex; }
 .org-fab { width:40px; height:40px; border-radius:12px; border:1px solid var(--line2);
            background:var(--panel); color:var(--muted); cursor:pointer;
@@ -526,15 +525,15 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
   <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 </svg>
-<div class="mock-banner">목업 — 실구현(web/) 스냅샷 · [입장하기] 버튼 → "입장 후" 화면으로 이동</div>
+<div class="mock-banner">목업 — 실구현(web/) 스냅샷 · [로그인] 버튼 → "로그인 후" 화면으로 이동</div>
 <section id="view-login">
   <header><div class="logo"><span class="mark"><svg class="ic"><use href="#i-cup"/></svg></span>Plugin Cafe</div></header>
 
   <!-- 로그인 전이라 뒤 화면은 잠겨서 흐릿하게만 보임 -->
   <div class="locked-bg">
     <div class="side">
-      <div class="box menu">TODAY'S PRESET — 나만의 메뉴 …</div>
-      <div class="box">RECIPE — plugin ● 추출중</div>
+      <div class="box menu">PRESET — 나만의 세트 …</div>
+      <div class="box">plugin ● 사용중</div>
     </div>
     <div class="mainp"><div class="box tall">Claude · 터미널 …</div></div>
   </div>
@@ -543,7 +542,7 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
     <form class="login-card" onsubmit="location.href='main.html';return false">
       <div class="mark"><svg class="ic"><use href="#i-cup"/></svg></div>
       <h2>Plugin Cafe</h2>
-      <div class="sub">GitHub 계정으로 입장하기</div>
+      <div class="sub">GitHub 계정으로 로그인</div>
 
       <div class="field">
         <label for="loginId">ID</label>
@@ -562,11 +561,11 @@ details.inspect summary { display:flex; align-items:center; gap:6px; cursor:poin
       </div>
 
       <div class="login-err" id="loginErr" hidden></div>
-      <button class="btn-login" type="submit" id="loginBtn"><svg class="ic"><use href="#i-door"/></svg>입장하기</button>
+      <button class="btn-login" type="submit" id="loginBtn"><svg class="ic"><use href="#i-door"/></svg>로그인</button>
 
       <div class="note">
-        입장하면 <b>자동 저장</b>되어 다음부터 이 창 없이 바로 시작됩니다<br>
-        organization 주소는 입장 후 <b>챗 입력줄의 ☕ 아이콘</b>으로 추가합니다
+        로그인하면 <b>자동 저장</b>되어 다음부터 이 창 없이 바로 시작됩니다<br>
+        organization 주소는 로그인 후 <b>챗 입력줄의 ☕ 아이콘</b>으로 추가합니다
       </div>
     </form>
   </div>
