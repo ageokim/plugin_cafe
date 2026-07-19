@@ -16,3 +16,13 @@ plugins/*
 # 머신별 상태 (Architecture.md §8.7)
 .claude/settings.local.json
 .claude-plugin/marketplace.json
+
+# 설치 링크 (Architecture.md §6.2 — pm이 생성·관리)
+.claude/plugin_roots/
+.claude/plugins/
+.claude/commands/
+.claude/skills/
+.claude/workflows/
+
+# 디자인 참조 번들 (18.8MB — 로컬 참조만, §12.1)
+docs/mockup/Plugin Cafe - *.html

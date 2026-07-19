@@ -1,4 +1,4 @@
-# plugin_market
+# Plugin Cafe (repo: plugin_cafe)
 
 Claude Code plugin을 여러 GitHub organization에서 검색·설치·활성화·관리하는 시스템.
 

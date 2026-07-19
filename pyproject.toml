@@ -1,8 +1,32 @@
-# lint/format 설정 전용 — 패키징 아님 (패키지는 pip 설치 없이 python -m으로 실행, §13.2)
-# TODO: Google Python Style 기반 pylint/formatter 설정 추가
+# lint/format 설정 전용 — 패키징 아님 (Architecture.md §13.3)
+# 패키지는 pip 설치하지 않고 `"$PYTHON" -m pm`으로 실행한다. [project]/[build-system] 금지.
+
+[tool.pylint.main]
+py-version = "3.8"
+source-roots = ["scripts"]
+jobs = 0
 
 [tool.pylint.format]
 max-line-length = 80
+indent-string = "    "
 
 [tool.pylint.basic]
-docstring-min-length = 1
+# 5줄 미만 함수(단순 property 등)는 독스트링 면제, _private·test_는 항상 면제
+docstring-min-length = 5
+no-docstring-rgx = "^(_|test_)"
+good-names = ["e", "i", "j", "k", "fd", "fp"]
+
+[tool.pylint.design]
+# DI 생성자(§2.2)는 협력자가 많다
+max-args = 8
+
+[tool.pylint."messages control"]
+disable = [
+    "too-few-public-methods",       # 불변 dataclass·에러 계층
+    "too-many-instance-attributes", # ProjectPaths·Plugin
+    "duplicate-code",
+]
+
+[tool.yapf]
+based_on_style = "google"
+column_limit = 80

@@ -3,182 +3,514 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plugin Market — 로그인 후 (목업)</title>
+<title>Plugin Cafe — 로그인 후 (목업)</title>
 <style>
-  :root {
-    --bg:#0a0c10; --panel:#12151c; --glass:rgba(18,21,28,.72);
-    --line:#232833; --line2:#2e3442;
-    --text:#e7eaf0; --muted:#8b93a3; --dim:#5c6474;
-    --acc1:#6366f1; --acc2:#a855f7;
-    --grad:linear-gradient(135deg,var(--acc1),var(--acc2));
-    --green:#34d399; --amber:#fbbf24;
-    --sbw:288px; --r:14px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:
-           radial-gradient(900px 400px at 85% -10%, rgba(168,85,247,.13), transparent),
-           radial-gradient(700px 400px at -10% 110%, rgba(99,102,241,.10), transparent),
-           var(--bg);
-         color:var(--text); overflow:hidden;
-         font-family:-apple-system,"Segoe UI","Noto Sans KR",sans-serif; line-height:1.5; }
-  .ic { width:16px; height:16px; stroke:currentColor; stroke-width:2;
-        fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+/* Plugin Cafe 프론트 스타일 — 카페 테마 (docs/mockup/Plugin Cafe - *.html 디자인 이식, §12·§13.2)
+   크림 배경 + 테라코타→살몬 그라데이션, Gowun Batang 세리프, 커피 메타포 아이콘 */
 
-  .mock-banner { background:rgba(251,191,36,.08); color:#d4a52a; text-align:center;
-                 font-size:.74rem; padding:5px; border-bottom:1px solid rgba(251,191,36,.15); }
+@import url("../../web/vendor/fonts/fonts.css");
 
-  /* ── 헤더 ──────────────────────────────────────────── */
-  header { display:flex; align-items:center; gap:14px; padding:10px 18px;
-           background:var(--glass); backdrop-filter:blur(14px);
+:root {
+  --bg:#f7f1e8; --panel:#fffdf8; --glass:rgba(255,253,248,.88);
+  --line:#e9dccb; --line2:#dccbb4; --line3:#e2d3bd;
+  --text:#3d2f24; --muted:#8f7b66; --dim:#b3a18c;
+  --acc1:#c96a4e; --acc2:#e59578;
+  --grad:linear-gradient(135deg,var(--acc1),var(--acc2));
+  --green:#7c9a6d; --amber:#d9a441; --red:#cf6a4f; --sage:#6d8a5f;
+  --tan:#c08a52; --link:#8a5a3b;
+  --acc-sh:rgba(201,106,78,.3); --card-sh:rgba(138,90,59,.07);
+  --pop-sh:rgba(90,60,35,.18);
+  --term-bg:#3a2e26; --term-fg:#efe3d1; --term-prompt:#e0a866; --term-green:#a3c293;
+  --serif:'Gowun Batang', serif;
+  --sbw:360px; --r:14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+[hidden] { display:none !important; }
+body { background:
+         radial-gradient(900px 400px at 85% -10%, rgba(192,138,82,.16), transparent),
+         radial-gradient(700px 400px at -10% 110%, rgba(124,154,109,.12), transparent),
+         var(--bg);
+       color:var(--text); overflow:hidden;
+       font-family:"Noto Sans KR",-apple-system,"Segoe UI",sans-serif; line-height:1.5; }
+button { font-family:inherit; }
+a { color:var(--link); } a:hover { color:#6f4531; }
+.serif { font-family:var(--serif); }
+.ic { width:16px; height:16px; stroke:currentColor; stroke-width:1.8;
+      fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none;
+      pointer-events:none; }
+
+/* 아이콘 애니메이션(스팀·낙하·스윙·추출)은 SMIL로 스프라이트 안에 있다 —
+   문서 CSS는 use shadow 내부에 닿지 않는다 (index.html 스프라이트 참조) */
+
+/* ── 뷰 루트: 로그인 ↔ 메인 (JS 전환) ─────────────────── */
+#view-login, #view-main { display:flex; flex-direction:column; height:100vh; }
+
+/* ── 헤더 ─────────────────────────────────────────────── */
+header { display:flex; align-items:center; gap:14px; padding:10px 18px;
+         background:var(--glass); backdrop-filter:blur(10px);
+         border-bottom:1px solid var(--line); }
+.logo { display:flex; align-items:center; gap:10px; font-weight:800;
+        letter-spacing:-.02em; font-family:var(--serif); font-size:1.02rem; }
+.logo .mark { width:30px; height:30px; border-radius:10px; background:var(--grad);
+              display:flex; align-items:center; justify-content:center;
+              box-shadow:0 4px 12px rgba(201,106,78,.35); }
+.logo .mark .ic { width:17px; height:17px; color:#fff; }
+.conn { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:.78rem;
+        background:var(--panel); border:1px solid var(--line);
+        border-radius:999px; padding:4px 13px; }
+.conn b { color:var(--text); font-weight:600; }
+.conn .dot { width:7px; height:7px; border-radius:50%; background:var(--green);
+             box-shadow:0 0 8px var(--green); }
+.conn .dot.warn { background:var(--amber); box-shadow:0 0 8px var(--amber); }
+.btn { display:inline-flex; align-items:center; gap:6px; background:var(--panel);
+       border:1px solid var(--line2); color:var(--text); padding:6px 14px;
+       border-radius:999px; font-size:.78rem; text-decoration:none; cursor:pointer;
+       transition:all .15s; }
+.btn:hover { background:#f3e9da; border-color:#c9b298; }
+.btn.primary { background:var(--grad); border:none; color:#fff; font-weight:600;
+               box-shadow:0 3px 10px var(--acc-sh); }
+.btn.ghost { border:none; background:transparent; color:var(--muted); padding:5px 8px;
+             border-radius:7px; }
+.btn.ghost:hover { color:var(--text); background:rgba(138,90,59,.08); }
+.btn.sm { padding:3px 11px; font-size:.7rem; }
+.btn.danger:hover { color:var(--red); background:rgba(207,106,79,.1); }
+.btn.dangerp { background:rgba(207,106,79,.13); border-color:rgba(207,106,79,.4); color:var(--red); }
+.btn:disabled, button:disabled { opacity:.5; cursor:default; pointer-events:none; }
+header .logout { margin-left:auto; }
+
+/* 미검증 세션 배너 + 기능 잠금 (§10.2) */
+.lock-banner { background:rgba(217,164,65,.12); color:#9a7422; text-align:center;
+               font-size:.74rem; padding:5px; border-bottom:1px solid rgba(217,164,65,.25); }
+body.pm-locked .needs-auth { opacity:.4; pointer-events:none; }
+
+/* ── 레이아웃 ─────────────────────────────────────────── */
+.app { flex:1; min-height:0; display:flex; position:relative; }
+
+/* 사이드바 */
+.sidebar { width:var(--sbw); min-width:var(--sbw); background:rgba(255,253,248,.8);
+           backdrop-filter:blur(10px); border-right:1px solid var(--line);
+           display:flex; flex-direction:column; transition:transform .24s cubic-bezier(.4,0,.2,1);
+           z-index:20; position:relative; }
+
+/* 폭 조절 핸들 — 오른쪽 가장자리 드래그 (§12.2) */
+.sb-resize { position:absolute; top:0; bottom:0; right:-4px; width:8px;
+             cursor:col-resize; z-index:25; }
+.sb-resize:hover, body.sb-resizing .sb-resize {
+  background:linear-gradient(90deg, transparent, rgba(192,138,82,.4), transparent); }
+body.sb-resizing { cursor:col-resize; user-select:none; }
+body.sb-resizing .sidebar { transition:none; }
+.sb-head { display:flex; align-items:center; gap:8px; padding:12px 14px;
            border-bottom:1px solid var(--line); }
-  .logo { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.02em; }
-  .logo .mark { width:28px; height:28px; border-radius:9px; background:var(--grad);
-                display:flex; align-items:center; justify-content:center;
-                box-shadow:0 4px 14px rgba(124,93,250,.4); }
-  .logo .mark .ic { width:15px; height:15px; color:#fff; }
-  .conn { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:.78rem;
-          background:rgba(255,255,255,.03); border:1px solid var(--line);
-          border-radius:999px; padding:4px 12px; }
-  .conn b { color:var(--text); font-weight:600; }
-  .conn .dot { width:7px; height:7px; border-radius:50%; background:var(--green);
-               box-shadow:0 0 8px var(--green); }
-  .btn { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.04);
-         border:1px solid var(--line2); color:var(--text); padding:6px 13px;
-         border-radius:999px; font-size:.78rem; text-decoration:none; cursor:pointer;
-         transition:all .15s; }
-  .btn:hover { background:rgba(255,255,255,.08); border-color:#3a4152; }
-  .btn.primary { background:var(--grad); border:none; color:#fff; font-weight:600;
-                 box-shadow:0 4px 14px rgba(124,93,250,.35); }
-  .btn.ghost { border:none; background:transparent; color:var(--muted); padding:5px 8px; }
-  .btn.ghost:hover { color:var(--text); background:rgba(255,255,255,.06); }
-  .btn.sm { padding:3px 10px; font-size:.7rem; }
-  .btn.danger:hover { color:#f87171; background:rgba(248,113,113,.1); }
-  header .logout { margin-left:auto; }
+.sb-head h3 { display:flex; align-items:center; gap:8px; font-size:.85rem;
+              margin-right:auto; letter-spacing:-.01em; font-family:var(--serif); }
+.sb-head h3 .ic { color:var(--tan); }
+#pinBtn { display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+          border:1px solid var(--line2); border-radius:999px; padding:3px 11px;
+          font-size:.7rem; color:var(--muted); background:transparent; transition:all .15s; }
+#pinBtn.on { background:var(--grad); border-color:transparent; color:#fff;
+             box-shadow:0 2px 8px var(--acc-sh); }
 
-  /* ── 레이아웃 ──────────────────────────────────────── */
-  .app { display:flex; height:calc(100vh - 74px); position:relative; }
+/* 미고정: 얇은 레일 + hover 슬라이드 (~300ms 접힘 지연은 JS) */
+.app.unpinned .sidebar { position:absolute; top:0; bottom:0; left:0;
+                         transform:translateX(calc(-1 * var(--sbw)));
+                         box-shadow:16px 0 40px rgba(90,60,35,.25); }
+.app.unpinned .sidebar.open { transform:translateX(0); }
+.rail { display:none; position:absolute; top:0; bottom:0; left:0; width:18px; z-index:19;
+        background:linear-gradient(90deg, rgba(192,138,82,.22), transparent);
+        align-items:center; justify-content:center; color:var(--dim); cursor:pointer; }
+.rail .ic { width:13px; height:13px; }
+.app.unpinned .rail { display:flex; }
 
-  /* 사이드바 */
-  .sidebar { width:var(--sbw); min-width:var(--sbw); background:var(--glass);
-             backdrop-filter:blur(14px); border-right:1px solid var(--line);
-             display:flex; flex-direction:column; transition:transform .24s cubic-bezier(.4,0,.2,1);
-             z-index:20; }
-  .sb-head { display:flex; align-items:center; gap:8px; padding:12px 14px;
-             border-bottom:1px solid var(--line); }
-  .sb-head h3 { display:flex; align-items:center; gap:8px; font-size:.85rem;
-                margin-right:auto; letter-spacing:-.01em; }
-  .sb-head h3 .ic { color:var(--acc2); }
-  #pinBtn { display:inline-flex; align-items:center; gap:5px; cursor:pointer;
-            border:1px solid var(--line2); border-radius:999px; padding:3px 10px;
-            font-size:.7rem; color:var(--muted); background:transparent; transition:all .15s; }
-  #pinBtn.on { background:var(--grad); border-color:transparent; color:#fff; }
+.sb-body { overflow-y:auto; flex:1; }
+.sb-sec { padding:12px 14px; border-bottom:1px solid var(--line); }
+.sb-sec .t { display:flex; align-items:center; gap:6px; font-size:.7rem;
+             color:var(--muted); margin-bottom:8px; letter-spacing:.04em;
+             font-family:var(--serif); }
+.orgadd { display:flex; gap:6px; }
+input { background:#fff; border:1px solid var(--line2); border-radius:10px;
+        padding:7px 11px; color:var(--text); font-size:.76rem; outline:none;
+        font-family:inherit; transition:border-color .15s; }
+input::placeholder { color:var(--dim); }
+input:focus { border-color:var(--link); }
+.orgadd input { flex:1; min-width:0; }
+.addbtn { width:30px; height:30px; border-radius:10px; background:var(--grad); border:none;
+          color:#fff; display:flex; align-items:center; justify-content:center;
+          cursor:pointer; flex:none; box-shadow:0 3px 8px var(--acc-sh); }
+.inline-err { color:var(--red); font-size:.68rem; margin-top:6px; line-height:1.4;
+              word-break:break-all; }
+.search-row { position:relative; margin-bottom:8px; }
+.search-row .ic { position:absolute; left:10px; top:8px; width:14px; height:14px; color:var(--dim); }
+.search-row input { width:100%; padding-left:30px; }
+.chips { display:flex; gap:5px; flex-wrap:wrap; }
+.chip { border:1px solid var(--line2); border-radius:999px; padding:2px 10px;
+        font-size:.66rem; color:var(--muted); cursor:pointer; display:inline-flex;
+        align-items:center; gap:5px; transition:all .15s; }
+.chip .d { width:6px; height:6px; border-radius:50%; }
+.chip .d.enabled { background:var(--green); }
+.chip .d.installed { background:var(--amber); }
+.chip .d.available { background:var(--dim); }
+.chip.on { background:rgba(192,138,82,.14); border-color:var(--link); color:var(--text); }
 
-  .app.unpinned .sidebar { position:absolute; top:0; bottom:0; left:0;
-                           transform:translateX(calc(-1 * var(--sbw)));
-                           box-shadow:16px 0 40px rgba(0,0,0,.55); }
-  .app.unpinned .sidebar.open { transform:translateX(0); }
-  .rail { display:none; position:absolute; top:0; bottom:0; left:0; width:18px; z-index:19;
-          background:linear-gradient(90deg, rgba(124,93,250,.22), transparent);
-          align-items:center; justify-content:center; color:var(--dim); cursor:pointer; }
-  .rail .ic { width:13px; height:13px; }
-  .app.unpinned .rail { display:flex; }
+/* preset 섹션 — 대시드 보드 (§6.5) */
+.menu-board { background:#f6ead6; border:1.5px dashed #cfb391; border-radius:12px;
+              padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+.preset { display:flex; align-items:center; gap:7px; padding:6px 2px; font-size:.76rem;
+          position:relative; }
+.preset .nm { font-weight:700; overflow:hidden; text-overflow:ellipsis;
+              white-space:nowrap; max-width:45%; font-family:var(--serif); }
+.preset .lead { flex:1; border-bottom:2px dotted #cfb391; transform:translateY(-3px);
+                min-width:10px; }
+.preset .btn, .preset .pd { flex:none; } /* 긴 이름에도 [전환]·⋯ 유지 */
+.preset .n { color:var(--dim); font-size:.66rem; white-space:nowrap; }
+.preset .pd { width:8px; height:8px; border-radius:50%; flex:none; }
+.preset .pd.on  { background:var(--green); box-shadow:0 0 6px var(--green); }
+.preset .pd.off { background:var(--dim); }
+.preset .pd.partial { background:linear-gradient(135deg, var(--green) 50%, var(--dim) 50%); }
+.preset > .ic { color:var(--tan); width:13px; height:13px; }
 
-  .sb-body { overflow-y:auto; flex:1; }
-  .sb-sec { padding:12px 14px; border-bottom:1px solid var(--line); }
-  .sb-sec .t { display:flex; align-items:center; gap:6px; font-size:.7rem;
-               color:var(--muted); margin-bottom:8px; letter-spacing:.02em; }
-  .orgadd { display:flex; gap:6px; }
-  input { background:rgba(0,0,0,.35); border:1px solid var(--line2); border-radius:10px;
-          padding:7px 11px; color:var(--text); font-size:.76rem; outline:none;
-          transition:border-color .15s; }
-  input:focus { border-color:var(--acc1); }
-  .orgadd input { flex:1; min-width:0; }
-  .addbtn { width:30px; height:30px; border-radius:10px; background:var(--grad); border:none;
-            color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .search-row { position:relative; margin-bottom:8px; }
-  .search-row .ic { position:absolute; left:10px; top:8px; width:14px; height:14px; color:var(--dim); }
-  .search-row input { width:100%; padding-left:30px; }
-  .chips { display:flex; gap:5px; flex-wrap:wrap; }
-  .chip { border:1px solid var(--line2); border-radius:999px; padding:2px 10px;
-          font-size:.66rem; color:var(--muted); cursor:pointer; display:inline-flex;
-          align-items:center; gap:5px; transition:all .15s; }
-  .chip .d { width:6px; height:6px; border-radius:50%; }
-  .chip.on { background:rgba(124,93,250,.16); border-color:var(--acc1); color:var(--text); }
+/* org 카드 — 카페 비주얼 (§12.2) */
+.sb-sec.recipe-t { border-bottom:none; padding-bottom:0; }
+.sb-sec.recipe-t .t { margin-bottom:0; }
+#pluginList { padding:10px 14px 14px; display:flex; flex-direction:column; gap:10px; }
+.org-card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+            box-shadow:0 2px 8px var(--card-sh); }
+/* overflow:hidden 대신 모서리별 radius — 행의 + preset 팝업이 잘리지 않게 (§12.2) */
+.org-card > .org-h { border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0; }
+.org-card > .plugin:last-child { border-radius:0 0 calc(var(--r) - 1px) calc(var(--r) - 1px); }
+.org-h { display:flex; align-items:center; gap:7px; padding:10px 13px;
+         font-size:.8rem; font-weight:700; font-family:var(--serif);
+         border-bottom:1px solid var(--line); background:rgba(192,138,82,.1); }
+.org-card.tint-1 .org-h { background:rgba(124,154,109,.12); }
+.org-h .ic { width:14px; height:14px; color:var(--tan); flex:none; }
+.org-card.tint-1 .org-h .ic { color:var(--sage); }
+.org-h > span:first-of-type { overflow:hidden; text-overflow:ellipsis;
+                              white-space:nowrap; } /* 긴 org 이름 말줄임 */
+.org-h .sp, .org-h .tag { flex:none; }
+.org-h .n { color:var(--dim); font-weight:400; font-size:.62rem;
+            font-family:"Noto Sans KR",sans-serif; }
+.org-h .sp { margin-left:auto; display:flex; }
+.tag { font-size:.6rem; font-weight:500; border:1px solid var(--line2); border-radius:999px;
+       padding:1px 7px; color:var(--dim); white-space:nowrap;
+       font-family:"Noto Sans KR",sans-serif; }
+.tag.warn { color:var(--amber); border-color:rgba(217,164,65,.5); }
+.plugin { display:flex; align-items:center; gap:7px; padding:7px 13px;
+          transition:background .12s; position:relative; }
+.plugin + .plugin { border-top:1px solid #f3ead9; }
+.plugin:hover { background:rgba(192,138,82,.05); }
+.plugin > .ic { width:13px; height:13px; flex:none; }
+.plugin .bean-on { color:var(--link); }
+.plugin .bean-off { color:#c9b298; }
+.plugin .addp { opacity:0; transition:opacity .15s; }
+.plugin:hover .addp { opacity:1; }
+.plugin .nm { font-size:.76rem; font-weight:600; white-space:nowrap;
+              max-width:40%; overflow:hidden; text-overflow:ellipsis; }
+.plugin .lead { flex:1; border-bottom:2px dotted #ecdfd0; transform:translateY(-3px);
+                min-width:10px; }
+.plugin .desc { color:var(--dim); font-size:.64rem;
+                max-width:34%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* 이름·설명이 길어도 상태·버튼은 줄어들거나 잘리지 않는다 */
+.plugin .st, .plugin .btn, .plugin .acts { flex:none; }
+.plugin .acts { display:inline-flex; align-items:center; gap:4px; }
+.st { display:inline-flex; align-items:center; gap:5px; font-size:.64rem;
+      font-weight:600; white-space:nowrap; }
+.st .d { width:6px; height:6px; border-radius:50%; }
+.st.on  { color:var(--green); }  .st.on  .d { background:var(--green); box-shadow:0 0 6px var(--green); }
+.st.off { color:var(--amber); }  .st.off .d { background:var(--amber); }
+.st.no  { color:var(--dim); }    .st.no .d { display:none; }
 
-  .preset { display:flex; align-items:center; gap:7px; padding:6px 2px; font-size:.76rem; }
-  .preset .nm { font-weight:600; }
-  .preset .n { color:var(--dim); font-size:.66rem; margin-right:auto; }
-  .preset .pd { width:8px; height:8px; border-radius:50%; flex:none; }
-  .preset .pd.on  { background:var(--green); box-shadow:0 0 6px var(--green); }
-  .preset .pd.off { background:var(--dim); }
+/* 인라인 삭제 확인 — "삭제할까요? [삭제][취소]" (§12.2) */
+.confirm { font-size:.68rem; color:var(--red); white-space:nowrap; }
 
-  .org-h { display:flex; align-items:center; gap:7px; padding:9px 14px;
-           font-size:.78rem; font-weight:700; background:rgba(255,255,255,.02);
-           border-bottom:1px solid var(--line); }
-  .org-h .ic { width:13px; height:13px; color:var(--dim); }
-  .org-h .n { color:var(--dim); font-weight:500; font-size:.68rem; }
-  .org-h .sp { margin-left:auto; display:flex; }
-  .plugin { display:flex; align-items:center; gap:8px; padding:9px 14px 9px 20px;
-            border-bottom:1px solid var(--line); transition:background .12s; }
-  .plugin:hover { background:rgba(255,255,255,.025); }
-  .plugin .nm { font-size:.78rem; font-weight:600; }
-  .plugin .desc { color:var(--dim); font-size:.66rem; flex:1;
-                  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .st { display:inline-flex; align-items:center; gap:5px; font-size:.64rem;
-        font-weight:600; white-space:nowrap; }
-  .st .d { width:7px; height:7px; border-radius:50%; }
-  .st.on  { color:var(--green); }  .st.on  .d { background:var(--green); box-shadow:0 0 6px var(--green); }
-  .st.off { color:var(--amber); }  .st.off .d { background:var(--amber); }
-  .st.no  { color:var(--dim); }    .st.no  .d { background:var(--dim); }
-  details.inspect { padding:10px 14px; font-size:.72rem; color:var(--muted); }
-  details.inspect summary { display:flex; align-items:center; gap:6px; cursor:pointer; }
+/* 팝업 메뉴 (preset ⋯ / + preset 선택) */
+.pop { position:absolute; right:8px; top:calc(100% - 4px); z-index:30;
+       background:var(--panel); border:1px solid var(--line3); border-radius:10px;
+       box-shadow:0 12px 32px var(--pop-sh); min-width:150px; max-width:240px;
+       padding:4px; display:flex; flex-direction:column; }
+/* 아래 공간이 부족하면 JS가 .up을 붙여 위로 펼친다 (§12.2) */
+.pop.up { top:auto; bottom:calc(100% - 4px); }
+.pop button { text-align:left; background:none; border:none; color:var(--text);
+              font-size:.72rem; padding:6px 10px; border-radius:7px; cursor:pointer; }
+.pop button:hover { background:rgba(138,90,59,.08); }
+.pop button.danger { color:var(--red); }
+.pop .sep { height:1px; background:var(--line); margin:3px 4px; }
+.pop .pop-q { font-size:.68rem; color:var(--red); padding:6px 10px 3px; }
+.pop .pop-empty { font-size:.68rem; color:var(--dim); padding:6px 10px; }
 
-  /* ── 메인: 탭 전환 (Claude ↔ 터미널) ────────────────── */
-  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
-  .main-h { display:flex; align-items:center; gap:12px; padding:9px 16px;
-            border-bottom:1px solid var(--line); background:var(--glass); backdrop-filter:blur(14px); }
-  .seg { display:flex; background:rgba(0,0,0,.35); border:1px solid var(--line2);
-         border-radius:999px; padding:3px; }
-  .seg button { display:inline-flex; align-items:center; gap:6px; border:none;
-                background:transparent; color:var(--muted); font-size:.78rem;
-                padding:5px 15px; border-radius:999px; cursor:pointer; transition:all .18s; }
-  .seg button.on { background:var(--grad); color:#fff; font-weight:600;
-                   box-shadow:0 2px 10px rgba(124,93,250,.35); }
-  .main-h .hint { font-size:.68rem; color:var(--dim); margin-left:auto; }
+.empty { color:var(--dim); font-size:.7rem; padding:4px 2px; }
+details.inspect { padding:10px 14px; font-size:.72rem; color:var(--muted); }
+details.inspect summary { display:flex; align-items:center; gap:6px; cursor:pointer; }
+.ins-row { padding:3px 0 0; font-size:.68rem; color:var(--muted); word-break:break-all; }
 
-  .view { flex:1; display:none; flex-direction:column; min-height:0; }
-  .view.on { display:flex; }
+/* 진행 중 스피너 */
+@keyframes spin { to { transform:rotate(360deg); } }
+.busy .ic { animation:spin .8s linear infinite; }
 
-  /* Claude 챗 뷰 */
-  .msgs { flex:1; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:12px; }
-  .msg { max-width:78%; padding:10px 15px; border-radius:16px; font-size:.82rem; }
-  .msg.user { align-self:flex-end; background:var(--grad); color:#fff;
-              border-bottom-right-radius:5px; }
-  .msg.claude { align-self:flex-start; background:var(--panel); border:1px solid var(--line);
-                border-bottom-left-radius:5px; }
-  .msg .skill { display:inline-flex; align-items:center; gap:5px; background:rgba(52,211,153,.1);
-                color:var(--green); border-radius:7px; padding:1px 8px; font-size:.66rem;
-                margin-bottom:4px; }
-  .chat-in { display:flex; gap:8px; padding:12px 18px; border-top:1px solid var(--line); }
-  .chat-in input { flex:1; padding:10px 14px; border-radius:12px; font-size:.82rem; }
-  .sendbtn { width:38px; height:38px; border-radius:12px; background:var(--grad); border:none;
-             color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+/* ── 메인: 탭 전환 (Claude ↔ 터미널 ↔ Workflow) ─────── */
+.main { flex:1; display:flex; flex-direction:column; min-width:0; }
+.main-h { display:flex; align-items:center; gap:12px; padding:9px 16px;
+          border-bottom:1px solid var(--line); background:var(--glass); backdrop-filter:blur(10px); }
+.seg { display:flex; background:#f3e9da; border:1px solid var(--line3);
+       border-radius:999px; padding:3px; }
+.seg button { display:inline-flex; align-items:center; gap:6px; border:none;
+              background:transparent; color:var(--muted); font-size:.78rem;
+              padding:5px 15px; border-radius:999px; cursor:pointer; transition:all .18s; }
+.seg button.on { background:var(--grad); color:#fff; font-weight:600;
+                 box-shadow:0 2px 8px var(--acc-sh); }
+.main-h .hint { font-size:.68rem; color:var(--dim); margin-left:auto;
+                overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  /* 터미널 뷰 */
-  .term { flex:1; overflow-y:auto; background:#07090d; margin:14px 18px 18px;
-          border:1px solid var(--line); border-radius:var(--r); padding:14px;
-          font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.76rem;
-          color:#cdd5e0; white-space:pre-wrap; box-shadow:inset 0 2px 12px rgba(0,0,0,.4); }
-  .term .p { color:#818cf8; }
-  .term .g { color:var(--green); }
-  .term .cursor { display:inline-block; width:7px; height:13px; background:var(--green);
-                  animation:blink 1s step-end infinite; vertical-align:middle; }
-  @keyframes blink { 50% { opacity:0; } }
+.view { flex:1; display:none; flex-direction:column; min-height:0; }
+.view.on { display:flex; }
+
+/* Claude 챗 뷰 */
+.msgs { flex:1; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:12px; }
+.msg { max-width:78%; padding:10px 15px; border-radius:16px; font-size:.82rem;
+       white-space:pre-wrap; word-break:break-word; }
+.msg.user { align-self:flex-end; background:var(--grad); color:#fff;
+            border-radius:16px 16px 5px 16px; box-shadow:0 4px 12px rgba(201,106,78,.22); }
+.msg.claude { align-self:flex-start; background:var(--panel); border:1px solid var(--line);
+              border-radius:16px 16px 16px 5px; box-shadow:0 2px 8px var(--card-sh); }
+.msg.err { border-color:rgba(207,106,79,.45); color:var(--red); }
+.msg.sys { align-self:center; background:transparent; border:1px dashed var(--line2);
+           color:var(--dim); font-size:.7rem; padding:6px 14px; border-radius:16px; }
+.msg .skill { color:var(--tan); font-weight:600; font-size:.68rem; }
+.msg pre { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.72rem;
+           white-space:pre-wrap; word-break:break-word; color:#5a4a3a; }
+.chat-in { display:flex; gap:9px; padding:12px 18px; border-top:1px solid var(--line);
+           position:relative; align-items:center; background:rgba(255,253,248,.7); }
+
+/* ── org 추가 팝오버 (§12.2 — 전송 버튼 왼쪽 아이콘) ── */
+.org-fab-wrap { position:relative; flex:none; display:flex; }
+.org-fab { width:40px; height:40px; border-radius:12px; border:1px solid var(--line2);
+           background:var(--panel); color:var(--muted); cursor:pointer;
+           display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.org-fab:hover { color:var(--text); background:#f3e9da; }
+.org-fab.open { background:var(--grad); border-color:transparent; color:#fff;
+                box-shadow:0 4px 12px rgba(201,106,78,.35); }
+.org-fab .ic { width:22px; height:22px; }
+.org-pop { position:absolute; bottom:calc(100% + 10px); left:0; width:320px;
+           background:var(--panel);
+           border:1px solid var(--line3); border-radius:14px; padding:12px 14px;
+           box-shadow:0 16px 40px var(--pop-sh); z-index:30; }
+.org-pop .t { display:flex; align-items:center; gap:6px; font-size:.7rem;
+              color:var(--muted); margin-bottom:8px; letter-spacing:.02em;
+              font-family:var(--serif); }
+.chat-in input { flex:1; padding:10px 14px; border-radius:12px; font-size:.82rem; }
+.sendbtn { width:40px; height:40px; border-radius:12px; background:var(--grad); border:none;
+           color:#fff; display:flex; align-items:center; justify-content:center;
+           cursor:pointer; flex:none; box-shadow:0 4px 12px rgba(201,106,78,.35);
+           transition:transform .12s; }
+.sendbtn:hover { transform:translateY(-1px); }
+.sendbtn .ic { width:22px; height:22px; }
+
+/* 터미널 뷰 — xterm.js 컨테이너, 로스티드 브라운 (§12.4) */
+.term-wrap { flex:1; min-height:0; margin:14px 18px 18px; position:relative;
+             background:var(--term-bg); border:1px solid var(--line3); border-radius:var(--r);
+             box-shadow:inset 0 2px 10px rgba(0,0,0,.25); overflow:hidden; }
+.term-host { position:absolute; inset:12px; }
+.term-host .xterm { height:100%; }
+.term-overlay { position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
+                gap:14px; align-items:center; justify-content:center; text-align:center;
+                background:rgba(58,46,38,.88); backdrop-filter:blur(4px);
+                color:var(--term-fg); font-size:.82rem; padding:20px; }
+
+/* ── 로그인 뷰 ────────────────────────────────────────── */
+.locked-bg { filter:blur(6px) brightness(.92); pointer-events:none; user-select:none;
+             display:flex; flex:1; min-height:0; }
+.locked-bg .side { width:280px; background:var(--panel); border-right:1px solid var(--line); padding:16px; }
+.locked-bg .mainp { flex:1; padding:16px; }
+.locked-bg .box { background:var(--panel); border:1px solid var(--line);
+                  border-radius:14px; padding:14px; margin-bottom:10px; color:var(--muted); }
+.locked-bg .box.menu { background:#f6ead6; border:1.5px dashed #cfb391; }
+.locked-bg .box.tall { height:80%; }
+
+.login-wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+.login-card { width:380px; background:rgba(255,253,248,.94); backdrop-filter:blur(16px);
+              border:1px solid var(--line3); border-radius:20px; padding:34px;
+              box-shadow:0 24px 60px rgba(90,60,35,.22); }
+.login-card .mark { width:50px; height:50px; border-radius:16px; background:var(--grad);
+                    display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+                    box-shadow:0 8px 20px rgba(201,106,78,.4); }
+.login-card .mark .ic { width:26px; height:26px; color:#fff; }
+.login-card h2 { text-align:center; margin-bottom:2px; letter-spacing:-.02em;
+                 font-family:var(--serif); }
+.login-card .sub { text-align:center; color:var(--muted); font-size:.8rem; margin-bottom:24px; }
+
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:.72rem; color:var(--muted); margin-bottom:5px;
+               letter-spacing:.03em; }
+.in { position:relative; }
+.in .ic { position:absolute; left:12px; top:11px; width:15px; height:15px; color:var(--dim); }
+.in input { width:100%; background:#fff; border:1px solid var(--line2);
+            border-radius:12px; padding:10px 12px 10px 36px; color:var(--text);
+            font-size:.88rem; outline:none; transition:border-color .15s; }
+.in input:focus { border-color:var(--link); }
+.field .hint { font-size:.7rem; color:var(--dim); margin-top:4px; }
+.login-err { color:var(--red); font-size:.74rem; text-align:center; margin:4px 0 8px;
+             background:rgba(207,106,79,.08); border:1px solid rgba(207,106,79,.3);
+             border-radius:10px; padding:8px 10px; line-height:1.5; }
+
+.btn-login { display:flex; align-items:center; justify-content:center; gap:8px;
+             width:100%; background:var(--grad); color:#fff; padding:12px; border:none;
+             font-size:.9rem; cursor:pointer;
+             border-radius:12px; font-weight:700; text-decoration:none; margin-top:8px;
+             box-shadow:0 6px 18px rgba(201,106,78,.4); transition:transform .12s; }
+.btn-login:hover { transform:translateY(-1px); }
+.note { text-align:center; color:var(--muted); font-size:.72rem; margin-top:16px; line-height:1.6; }
+.note b { color:var(--sage); font-weight:600; }
+
+/* ── 토스트 ───────────────────────────────────────────── */
+@keyframes toast-in { from { opacity:0; transform:translateY(8px); } }
+.toasts { position:fixed; right:18px; bottom:18px; display:flex; flex-direction:column;
+          gap:8px; z-index:100; max-width:380px; }
+.toast { background:var(--panel); border:1px solid var(--line3);
+         border-radius:12px; padding:10px 14px; font-size:.76rem; line-height:1.5;
+         box-shadow:0 10px 30px var(--pop-sh); animation:toast-in .2s ease;
+         white-space:pre-wrap; word-break:break-word; }
+.toast.err { border-color:rgba(207,106,79,.5); color:var(--red); }
+
+/* ── Workflow 타임라인 (§12.7) ────────────────────────── */
+.wf-bar { display:flex; align-items:center; gap:8px; padding:10px 14px 4px; }
+.wf-chip { font-size:.72rem; color:var(--muted); border:1px solid var(--line2);
+           border-radius:99px; padding:3px 12px; cursor:pointer; transition:all .15s;
+           background:transparent; }
+.wf-chip:hover { color:var(--text); }
+.wf-chip.on { background:var(--grad); color:#fff; border-color:transparent;
+              box-shadow:0 2px 8px var(--acc-sh); }
+.wf-auto { margin-left:auto; font-size:.7rem; color:var(--dim); display:flex;
+           align-items:center; gap:5px; cursor:pointer; }
+.wf-list { flex:1; overflow-y:auto; padding:8px 14px 16px; display:flex;
+           flex-direction:column; gap:12px; }
+.wf-empty { color:var(--dim); font-size:.74rem; padding:6px 2px; }
+.wf-empty.big { text-align:center; padding:60px 20px; line-height:1.8; }
+
+.wf-card { background:var(--panel); border:1px solid var(--line);
+           border-radius:14px; padding:12px 14px; box-shadow:0 2px 8px var(--card-sh); }
+.wf-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.wf-state { width:9px; height:9px; border-radius:50%; flex:none; }
+.wf-state.active { background:var(--green); box-shadow:0 0 8px var(--green); }
+.wf-state.idle { background:var(--amber); }
+.wf-state.ended { background:var(--dim); }
+.wf-state.done { background:var(--green); box-shadow:0 0 8px var(--green); }
+.wf-title { font-weight:700; font-size:.8rem; letter-spacing:-.01em;
+            font-family:var(--serif); }
+.wf-statetxt { margin-left:auto; font-size:.68rem; color:var(--muted); }
+
+.wf-line { border-left:1px solid var(--line3); margin-left:4px; padding-left:12px;
+           display:flex; flex-direction:column; gap:6px; }
+.wf-step { display:flex; align-items:baseline; gap:8px; font-size:.76rem;
+           min-width:0; }
+.wf-dot { width:16px; height:16px; border-radius:50%; flex:none; font-size:.6rem;
+          display:inline-flex; align-items:center; justify-content:center;
+          border:1px solid var(--line3); color:var(--muted);
+          transform:translateY(3px); background:var(--panel); margin-left:-21px; }
+.wf-dot.done { border-color:var(--green); color:var(--green); }
+.wf-dot.failed { border-color:var(--red); color:var(--red); }
+@keyframes wf-pulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(201,106,78,.45); }
+  50% { box-shadow:0 0 0 5px rgba(201,106,78,0); }
+}
+.wf-dot.running { border-color:var(--tan); background:var(--tan);
+                  animation:wf-pulse 1.4s ease infinite; }
+.wf-body { display:flex; align-items:baseline; gap:7px; min-width:0; flex:1; }
+.wf-name { font-weight:600; white-space:nowrap; }
+.wf-step.plugin .wf-name { background:var(--grad); -webkit-background-clip:text;
+                           background-clip:text; color:transparent; }
+.wf-plugin-badge { font-size:.62rem; border:1px solid var(--tan); color:#a4693e;
+                   border-radius:99px; padding:0 7px; white-space:nowrap; }
+.wf-sum { color:var(--muted); overflow:hidden; text-overflow:ellipsis;
+          white-space:nowrap; }
+.wf-time { margin-left:auto; font-size:.66rem; color:var(--dim);
+           white-space:nowrap; flex:none; }
+.wf-step.running .wf-time { color:#a4693e; }
+
+/* preset 멤버 편집 팝업 (§12.2) */
+.pop .pop-h { font-size:.68rem; color:var(--muted); padding:6px 10px 3px;
+              white-space:nowrap; }
+.pop-scroll { max-height:220px; overflow-y:auto; display:flex; flex-direction:column; }
+.pop button.sel { color:var(--green); }
+
+
+/* ── 목업 전용 (카페 테마 §12.1) ── */
+.mock-banner { background:rgba(217,164,65,.12); color:#9a7422; text-align:center;
+               font-size:.74rem; padding:5px; border-bottom:1px solid rgba(217,164,65,.25); }
+.term-mock { flex:1; overflow-y:auto; background:var(--term-bg); margin:14px 18px 18px;
+             border:1px solid var(--line3); border-radius:14px; padding:14px;
+             font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.76rem;
+             color:var(--term-fg); white-space:pre-wrap; }
+.term-mock .p { color:var(--term-prompt); } .term-mock .g { color:var(--term-green); }
+
 </style>
 </head>
 <body>
-
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 커피잔 + 스팀 (브랜드) -->
+  <symbol id="i-cup" viewBox="0 0 24 24">
+    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/>
+    <line x1="6" y1="1.5" x2="6" y2="4"><animate attributeName="opacity" values=".25;1;.25" dur="2.4s" repeatCount="indefinite"/></line>
+    <line x1="10" y1="1.5" x2="10" y2="4"><animate attributeName="opacity" values=".25;1;.25" dur="2.4s" begin="-0.8s" repeatCount="indefinite"/></line>
+    <line x1="14" y1="1.5" x2="14" y2="4"><animate attributeName="opacity" values=".25;1;.25" dur="2.4s" begin="-1.6s" repeatCount="indefinite"/></line>
+  </symbol>
+  <!-- 원두 (플러그인 상태 — CSS .bean-on/.bean-off 색) -->
+  <symbol id="i-bean" viewBox="0 0 24 24">
+    <g transform="rotate(-30 12 12)">
+      <ellipse cx="12" cy="12" rx="6.2" ry="8.8" fill="currentColor" stroke="none"/>
+      <path d="M12 3.6c-2.6 2.8 2.6 5.4 0 8.4s2.6 5.6 0 8.4" stroke="#fffdf8" stroke-width="1.5" fill="none"/>
+    </g>
+  </symbol>
+  <!-- 메뉴판 (TODAY'S PRESET — 스윙) -->
+  <symbol id="i-board" viewBox="0 0 24 24">
+    <circle cx="12" cy="2" r=".8" fill="currentColor" stroke="none"/>
+    <g>
+      <path d="M12 2 6.5 6.5M12 2l5.5 4.5"/>
+      <rect x="4" y="6.5" width="16" height="13" rx="2"/>
+      <path d="M8 11h8M8 14.5h5"/>
+      <animateTransform attributeName="transform" type="rotate" values="-4 12 2;4 12 2;-4 12 2" dur="3s" repeatCount="indefinite"/>
+    </g>
+  </symbol>
+  <!-- 드리퍼 + 낙하 방울 (RECIPE 헤더) -->
+  <symbol id="i-dripper" viewBox="0 0 24 24">
+    <path d="M3 4h18l-6 8h-6z"/>
+    <path d="M7 21h10"/>
+    <circle cx="12" cy="15" r="1" fill="currentColor" stroke="none">
+      <animate attributeName="cy" values="14;19;19" dur="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </symbol>
+  <!-- 문 (입장하기) -->
+  <symbol id="i-door" viewBox="0 0 24 24">
+    <path d="M13 4h3a2 2 0 0 1 2 2v14"/>
+    <path d="M2 20h20"/>
+    <path d="M13 20V5.5a1 1 0 0 0-1.3-.95l-5 1.5A1 1 0 0 0 6 7v13"/>
+    <path d="M10 12h.01"/>
+  </symbol>
+  <!-- 에스프레소 추출 (전송) -->
+  <symbol id="i-espresso" viewBox="0 0 24 24">
+    <path d="M4 3h16"/>
+    <path d="M7 3v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V3"/>
+    <line x1="10" y1="9" x2="10" y2="15" stroke-dasharray="2.5 2.5"><animate attributeName="stroke-dashoffset" values="10;0" dur="1s" repeatCount="indefinite"/></line>
+    <line x1="14" y1="9" x2="14" y2="15" stroke-dasharray="2.5 2.5"><animate attributeName="stroke-dashoffset" values="10;0" dur="1s" begin="-0.5s" repeatCount="indefinite"/></line>
+    <path d="M7 17h10v1.5a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 18.5z"/>
+  </symbol>
+  <!-- 커피가루 담기 (organization 추가 — 포터필터 + 낙하 가루) -->
+  <symbol id="i-grounds" viewBox="0 0 24 24">
+    <path d="M4 13h13l-1.2 4.6A2 2 0 0 1 13.9 19H7.1a2 2 0 0 1-1.9-1.4z"/>
+    <path d="M17 14h4"/>
+    <circle cx="8.5" cy="5" r=".9" fill="currentColor" stroke="none">
+      <animate attributeName="cy" values="3;10" dur="1.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="11.5" cy="4" r=".9" fill="currentColor" stroke="none">
+      <animate attributeName="cy" values="2;9" dur="1.4s" begin="-0.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.4s" begin="-0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="14.5" cy="6" r=".9" fill="currentColor" stroke="none">
+      <animate attributeName="cy" values="3;10" dur="1.4s" begin="-0.9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.4s" begin="-0.9s" repeatCount="indefinite"/>
+    </circle>
+  </symbol>
+  <!-- 유틸 아이콘 -->
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.9 15.5a2 2 0 0 0-1.4-1.4L2.4 12.5a.5.5 0 0 1 0-1L8.5 9.9a2 2 0 0 0 1.4-1.4l1.6-6.1a.5.5 0 0 1 1 0l1.6 6.1a2 2 0 0 0 1.4 1.4l6.1 1.6a.5.5 0 0 1 0 1l-6.1 1.6a2 2 0 0 0-1.4 1.4l-1.6 6.1a.5.5 0 0 1-1 0z"/></symbol>
   <symbol id="i-term" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
@@ -187,7 +519,6 @@
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 11V6a3 3 0 1 1 6 0v5l2 3H7z"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
-  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
   <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
@@ -196,167 +527,256 @@
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></symbol>
   <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 8.5 4.5L12 11 3.5 6.5Z"/><path d="m3.5 12 8.5 4.5 8.5-4.5"/><path d="m3.5 17.5 8.5 4.5 8.5-4.5"/></symbol>
   <symbol id="i-org" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 </svg>
+<div class="mock-banner">목업 — 실구현(web/) 스냅샷 · 탭(Claude/터미널/Workflow) · 전송 버튼 왼쪽 ☕ 아이콘 = org 추가 팝오버 · 고정 버튼/왼쪽 호버 · 로그아웃 → 로그인 화면</div>
+<section id="view-main">
+  <header>
+    <div class="logo"><span class="mark"><svg class="ic"><use href="#i-cup"/></svg></span>Plugin Cafe</div>
+    <div class="conn"><span class="dot" id="connDot"></span><span>github.xxx.xxx · </span><b>ageokim</b> <span style="color:var(--dim)">(자동 로그인)</span></div>
+    <button class="btn logout" id="logoutBtn"><svg class="ic"><use href="#i-out"/></svg>로그아웃</button>
+  </header>
+  <div class="lock-banner" id="lockBanner" hidden>
+    미검증 세션 — 첫 organization 추가가 검증을 통과하면 잠금이 풀립니다. 그 전까지 챗·터미널·플러그인 액션은 사용할 수 없습니다.
+  </div>
 
-<div class="mock-banner">목업 — <b>고정 버튼</b>으로 사이드바 전환 (미고정 시 왼쪽 가장자리 호버) · 상단 <b>Claude/터미널 탭</b>으로 화면 전환 · 로그아웃 → 로그인 화면</div>
+  <div class="app" id="app">
+    <div class="rail" id="rail"><svg class="ic"><use href="#i-chev"/></svg></div>
 
-<header>
-  <div class="logo"><span class="mark"><svg class="ic"><use href="#i-box"/></svg></span>Plugin Market</div>
-  <div class="conn"><span class="dot"></span>github.xxx.xxx · <b>ageokim</b> (자동 로그인)</div>
-  <a class="btn logout" href="login.html"><svg class="ic"><use href="#i-out"/></svg>로그아웃</a>
-</header>
+    <!-- ◀ 사이드바: 플러그인 (§12.2) -->
+    <aside class="sidebar" id="sb">
+      <div class="sb-head">
+        <h3><svg class="ic"><use href="#i-bean"/></svg>플러그인</h3>
+        <button id="pinBtn" type="button"><svg class="ic" style="width:11px;height:11px"><use href="#i-pin"/></svg><span id="pinTxt">고정</span></button>
+      </div>
+      <div class="sb-body">
 
-<div class="app" id="app">
+        <div class="sb-sec">
+          <div class="search-row">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="searchIn" placeholder="플러그인 검색…">
+          </div>
+          <div class="chips" id="chips">
+            <span class="chip on">전체 8</span>
+            <span class="chip"><span class="d enabled"></span>사용중 3</span>
+            <span class="chip"><span class="d installed"></span>꺼짐 1</span>
+            <span class="chip"><span class="d available"></span>미설치 4</span>
+          </div>
+        </div>
 
-  <div class="rail" id="rail"><svg class="ic"><use href="#i-chev"/></svg></div>
+        <div class="sb-sec">
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-board"/></svg>PRESET — 나만의 세트
+            <button class="btn ghost sm needs-auth" id="presetNewBtn" type="button" title="새 preset" style="margin-left:auto"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button>
+          </div>
+          <div class="orgadd" id="presetNewRow" hidden>
+            <input id="presetNewName" placeholder="preset 이름">
+            <button class="addbtn" id="presetNewOk" type="button" title="만들기"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
+          </div>
+          <div id="presetList"><div class="menu-board">
+            <div class="preset"><span class="pd on"></span><span class="nm">코드리뷰 세트</span><span class="lead"></span><span class="n">3개 · 전부 켜짐</span><button class="btn sm primary">전환</button><button class="btn ghost sm">⋯</button></div>
+            <div class="preset"><span class="pd off"></span><span class="nm">문서작업 세트</span><span class="lead"></span><span class="n">2개 · 꺼짐</span><button class="btn sm">전환</button><button class="btn ghost sm">⋯</button></div>
+            <div class="preset"><span class="pd partial"></span><span class="nm">실험 세트</span><span class="lead"></span><span class="n">4개 · 일부 켜짐</span><button class="btn sm">전환</button><button class="btn ghost sm">⋯</button></div>
+          </div></div>
+        </div>
 
-  <!-- ◀ 사이드바: 플러그인 -->
-  <aside class="sidebar" id="sb">
-    <div class="sb-head">
-      <h3><svg class="ic"><use href="#i-box"/></svg>플러그인</h3>
-      <button id="pinBtn" class="on"><svg class="ic" style="width:11px;height:11px"><use href="#i-pin"/></svg>고정</button>
-    </div>
-    <div class="sb-body">
+        <div class="sb-sec recipe-t">
+          <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-dripper"/></svg>ORG별 플러그인</div>
+        </div>
+        <div id="pluginList">
+          <div class="org-card">
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-a</span> <span class="n">3개</span>
+            <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-a</span><span class="lead"></span><span class="desc">코드 리뷰 자동화</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-b</span><span class="lead"></span><span class="desc">API 클라이언트 생성</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st off"><span class="d"></span>꺼짐</span><span class="acts"><button class="btn ghost sm">켜기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-c</span><span class="lead"></span><span class="desc">문서 템플릿</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
+          </div>
+          <div class="org-card tint-1">
+          <div class="org-h"><svg class="ic" style="width:14px;height:14px"><use href="#i-dripper"/></svg><span>org-b</span> <span class="n">5개</span>
+            <span class="sp"><button class="btn ghost sm" title="재스캔"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm" title="org 제거 (설치본 포함 삭제)"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-on" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-x</span><span class="lead"></span><span class="desc">로그 분석 workflow</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st on"><span class="d"></span>사용중</span><span class="acts"><button class="btn ghost sm" title="업데이트 (새 버전 있음)"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></button><button class="btn ghost sm">끄기</button><button class="btn ghost sm danger" title="삭제"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></button></span></div>
+          <div class="plugin"><svg class="ic bean-off" style="width:13px;height:13px"><use href="#i-bean"/></svg><span class="nm">plugin-y</span><span class="lead"></span><span class="desc">보안 점검 skill</span><button class="btn ghost sm addp" title="preset에 추가"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></button><span class="st no"><span class="d"></span>미설치</span><span class="acts"><button class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</button></span></div>
+          </div>
+        </div>
 
-      <div class="sb-sec">
-        <div class="t"><svg class="ic" style="width:12px;height:12px"><use href="#i-link"/></svg>ORGANIZATION 추가 — 권한 있어야 등록됨</div>
-        <div class="orgadd">
-          <input placeholder="https://github.xxx.xxx/org-c">
-          <button class="addbtn"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
+        <details class="inspect" id="inspectBox">
+          <summary><svg class="ic" style="width:13px;height:13px"><use href="#i-act"/></svg>Inspect — 상태 상세</summary>
+          <div id="inspectBody" style="padding-top:8px">org-a/plugin-a: clone ✓ 등록 ✓ 활성 ✓ · org-b/plugin-x: 업데이트 있음</div>
+        </details>
+      </div>
+      <div class="sb-resize" id="sbResize" title="드래그로 폭 조절 · 더블클릭 = 기본 폭"></div>
+    </aside>
+
+    <!-- ▶ 메인: 탭 전환 (Claude ↔ 터미널) -->
+    <div class="main">
+      <div class="main-h">
+        <div class="seg">
+          <button id="tabChat" class="on" type="button"><svg class="ic" style="width:13px;height:13px"><use href="#i-spark"/></svg>Claude</button>
+          <button id="tabTerm" type="button"><svg class="ic" style="width:13px;height:13px"><use href="#i-term"/></svg>터미널</button>
+          <button id="tabFlow" type="button"><svg class="ic" style="width:13px;height:13px"><use href="#i-act"/></svg>Workflow</button>
+        </div>
+        <button class="btn sm primary needs-auth" id="actionBtn" type="button"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg><span id="actionTxt">새 대화</span></button>
+        <span class="hint" id="hintTxt">plugin-a 설치됨 — 새 대화부터 적용 · cwd=repo 루트</span>
+      </div>
+
+      <!-- Claude 챗 뷰 (§12.3) -->
+      <div class="view on" id="view-chat">
+        <div class="msgs" id="msgs">
+          <div class="msg sys">새 대화 — 활성화된 플러그인이 이 세션부터 적용됩니다</div>
+          <div class="msg user">방금 받은 repo 코드리뷰 해줘</div>
+          <div class="msg claude"><span class="skill"><svg class="ic" style="width:10px;height:10px"><use href="#i-spark"/></svg>plugin-a : code-review skill</span><br>3개 파일에서 2건의 이슈를 찾았습니다:<br>1. <b>auth.py:42</b> — 토큰 만료 검사 누락 …</div>
+          <div class="msg user">1번 고쳐줘</div>
+          <div class="msg claude">auth.py:42에 만료 검사를 추가했습니다. 테스트 7건 통과 ✓</div>
+        </div>
+        <div class="chat-in">
+          <!-- org 추가 — 전송 버튼 왼쪽 아이콘, 클릭 시 팝오버 (§12.2) -->
+          <div class="org-fab-wrap" id="orgFabWrap">
+            <div class="org-pop" id="orgPop" hidden>
+              <div class="t"><svg class="ic" style="width:13px;height:13px"><use href="#i-grounds"/></svg>ORGANIZATION 추가 — 권한 있어야 등록됨</div>
+              <div class="orgadd">
+                <input id="orgUrl" placeholder="https://github.xxx.xxx/org-name">
+                <button class="addbtn" id="orgAddBtn" type="button" title="org 추가"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg></button>
+              </div>
+              <div class="inline-err" id="orgErr" hidden></div>
+            </div>
+            <button class="org-fab" id="orgFab" type="button" title="organization 추가"><svg class="ic"><use href="#i-grounds"/></svg></button>
+          </div>
+          <input id="chatIn" placeholder="claude에게 메시지… (pm 명령도 입력 가능)">
+          <button class="sendbtn" id="sendBtn" type="button" title="전송"><svg class="ic"><use href="#i-espresso"/></svg></button>
         </div>
       </div>
 
-      <div class="sb-sec">
-        <div class="search-row">
-          <svg class="ic"><use href="#i-search"/></svg>
-          <input placeholder="플러그인 검색…">
-        </div>
-        <div class="chips">
-          <span class="chip on">전체 8</span>
-          <span class="chip"><span class="d" style="background:var(--green)"></span>사용중 2</span>
-          <span class="chip"><span class="d" style="background:var(--amber)"></span>꺼짐 1</span>
-          <span class="chip"><span class="d" style="background:var(--dim)"></span>미설치 5</span>
-        </div>
-      </div>
-
-      <div class="sb-sec">
-        <div class="t"><svg class="ic" style="width:12px;height:12px"><use href="#i-layers"/></svg>PRESET — 나만의 세트
-          <span class="btn ghost sm" style="margin-left:auto" title="새 preset"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg></span>
-        </div>
-        <div class="preset"><span class="pd on"></span><span class="nm">코드리뷰 세트</span><span class="n">3개 · 전부 켜짐</span>
-          <span class="btn sm primary">전환</span><span class="btn ghost sm">⋯</span></div>
-        <div class="preset"><span class="pd off"></span><span class="nm">문서작업 세트</span><span class="n">2개 · 꺼짐</span>
-          <span class="btn sm">전환</span><span class="btn ghost sm">⋯</span></div>
-      </div>
-
-      <div class="org-h"><svg class="ic"><use href="#i-org"/></svg>org-a <span class="n">3개</span>
-        <span class="sp"><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></span><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></span></span>
-      </div>
-      <div class="plugin"><span class="nm">plugin-a</span><span class="desc">코드 리뷰 자동화</span>
-        <span class="st on"><span class="d"></span>사용중</span><span class="btn ghost sm">끄기</span><span class="btn ghost sm danger" title="삭제 (uninstall)"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></span></div>
-      <div class="plugin"><span class="nm">plugin-b</span><span class="desc">API 클라이언트 생성</span>
-        <span class="st off"><span class="d"></span>꺼짐</span><span class="btn ghost sm">켜기</span><span class="btn ghost sm danger" title="삭제 (uninstall)"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></span></div>
-      <div class="plugin"><span class="nm">plugin-c</span><span class="desc">문서 템플릿</span>
-        <span class="st no"><span class="d"></span>미설치</span>
-        <span class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</span></div>
-
-      <div class="org-h"><svg class="ic"><use href="#i-org"/></svg>org-b <span class="n">5개</span>
-        <span class="sp"><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg></span><span class="btn ghost sm"><svg class="ic" style="width:12px;height:12px"><use href="#i-x"/></svg></span></span>
-      </div>
-      <div class="plugin"><span class="nm">plugin-x</span><span class="desc">로그 분석 workflow</span>
-        <span class="st on"><span class="d"></span>사용중</span><span class="btn ghost sm">끄기</span><span class="btn ghost sm danger" title="삭제 (uninstall)"><svg class="ic" style="width:12px;height:12px"><use href="#i-trash"/></svg></span></div>
-      <div class="plugin"><span class="nm">plugin-y</span><span class="desc">보안 점검 skill</span>
-        <span class="st no"><span class="d"></span>미설치</span>
-        <span class="btn sm primary"><svg class="ic" style="width:11px;height:11px"><use href="#i-dl"/></svg>설치</span></div>
-
-      <details class="inspect"><summary><svg class="ic" style="width:13px;height:13px"><use href="#i-act"/></svg>Inspect — 상태 상세</summary>
-        <div style="padding-top:8px">org-a/plugin-a: clone ✓ 등록 ✓ 활성 ✓ · org-b/plugin-x: 업데이트 있음</div>
-      </details>
-    </div>
-  </aside>
-
-  <!-- ▶ 메인: 탭 전환 (Claude ↔ 터미널) -->
-  <div class="main">
-    <div class="main-h">
-      <div class="seg">
-        <button id="tabChat" class="on" onclick="view('chat')">
-          <svg class="ic" style="width:13px;height:13px"><use href="#i-spark"/></svg>Claude</button>
-        <button id="tabTerm" onclick="view('term')">
-          <svg class="ic" style="width:13px;height:13px"><use href="#i-term"/></svg>터미널</button>
-      </div>
-      <span class="btn sm primary" id="actionBtn"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg><span id="actionTxt">새 대화</span></span>
-      <span class="hint" id="hintTxt">plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market</span>
-    </div>
-
-    <!-- Claude 챗 뷰 -->
-    <div class="view on" id="view-chat">
-      <div class="msgs">
-        <div class="msg user">방금 받은 repo 코드리뷰 해줘</div>
-        <div class="msg claude">
-          <span class="skill"><svg class="ic" style="width:10px;height:10px"><use href="#i-spark"/></svg>plugin-a : code-review skill</span><br>
-          3개 파일에서 2건의 이슈를 찾았습니다:<br>
-          1. <b>auth.py:42</b> — 토큰 만료 검사 누락 …
-        </div>
-        <div class="msg user">1번 고쳐줘</div>
-        <div class="msg claude">auth.py:42에 만료 검사를 추가했습니다. 테스트 7건 통과 ✓</div>
-      </div>
-      <div class="chat-in">
-        <input placeholder="claude에게 메시지… (pm 명령도 입력 가능)">
-        <button class="sendbtn"><svg class="ic"><use href="#i-send"/></svg></button>
-      </div>
-    </div>
-
-    <!-- 터미널 뷰 -->
-    <div class="view" id="view-term">
-      <div class="term"><span class="p">$</span> pm list
-<span class="g">org-a/</span>  plugin-a ●enabled   plugin-b ●installed   plugin-c ○
-<span class="g">org-b/</span>  plugin-x ●enabled   plugin-y ○
+      <!-- 터미널 뷰 (§12.4) -->
+      <div class="view" id="view-term">
+        <div class="term-wrap">
+          <pre class="term-mock"><span class="p">$</span> pm list
+<span class="g">org-a/</span>  plugin-a enabled   plugin-b installed   plugin-c available
+<span class="g">org-b/</span>  plugin-x enabled   plugin-y available
 <span class="p">$</span> claude          ← 완전한 대화형 claude (플러그인 적용)
-╭──────────────────────────────╮
-│ ✻ Claude Code                │
-│   plugins: plugin-a, plugin-x│
-╰──────────────────────────────╯
 &gt; /plugin-a:review src/
   ⏺ 실행 중...
 &gt; exit            ← claude 종료 → 셸 복귀
-<span class="p">$</span> <span class="cursor"></span></div>
+<span class="p">$</span> ▮</pre>
+          <div class="term-overlay" id="termOverlay" hidden>
+            <div id="termOverlayMsg">세션 종료</div>
+            <button class="btn sm primary" id="termOverlayBtn" type="button"><svg class="ic" style="width:11px;height:11px"><use href="#i-plus"/></svg>새 터미널</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow 타임라인 뷰 (§12.7) -->
+      <div class="view" id="view-flow">
+        <div class="wf-bar">
+          <span class="wf-chip on" id="wfFilterAll">전체</span>
+          <span class="wf-chip" id="wfFilterPlugin">플러그인만</span>
+          <label class="wf-auto"><input type="checkbox" id="wfAutoScroll" checked> 자동 스크롤</label>
+        </div>
+        <div class="wf-list" id="wfList">
+          <div class="wf-card">
+            <div class="wf-head"><span class="wf-state done"></span><span class="wf-title">코드리뷰 요청</span><span class="wf-statetxt">완료</span></div>
+            <div class="wf-line">
+              <div class="wf-step done"><span class="wf-dot done">✓</span><div class="wf-body"><span class="wf-name">org 스캔</span><span class="wf-sum">repo 8개 확인</span></div><span class="wf-time">10:02:11</span></div>
+              <div class="wf-step done plugin"><span class="wf-dot done">✓</span><div class="wf-body"><span class="wf-name">code-review skill</span><span class="wf-plugin-badge">plugin-a</span><span class="wf-sum">이슈 2건 발견</span></div><span class="wf-time">10:02:34</span></div>
+              <div class="wf-step failed"><span class="wf-dot failed">✗</span><div class="wf-body"><span class="wf-name">테스트 실행</span><span class="wf-sum">1건 실패 — 재시도</span></div><span class="wf-time">10:03:01</span></div>
+              <div class="wf-step running"><span class="wf-dot running"></span><div class="wf-body"><span class="wf-name">auth.py 수정</span><span class="wf-sum">진행 중…</span></div><span class="wf-time">10:03:15</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <script>
-  // ── 메인 탭 전환: Claude ↔ 터미널 ──
-  function view(v) {
-    const chat = v === "chat";
-    document.getElementById("view-chat").classList.toggle("on", chat);
-    document.getElementById("view-term").classList.toggle("on", !chat);
-    document.getElementById("tabChat").classList.toggle("on", chat);
-    document.getElementById("tabTerm").classList.toggle("on", !chat);
-    document.getElementById("actionTxt").textContent = chat ? "새 대화" : "새 터미널";
-    document.getElementById("hintTxt").textContent = chat
-      ? "plugin-a 설치됨 — 새 대화부터 적용 · cwd=plugin_market"
-      : "진짜 셸 — claude·pm 직접 실행 · exit 두 번이면 이 세션만 종료";
+  // ── 목업 데모 JS: 탭·사이드바 고정/호버·org 팝오버·화면 이동만 ──
+  const views = { tabChat: "view-chat", tabTerm: "view-term", tabFlow: "view-flow" };
+  const actions = { tabChat: "새 대화", tabTerm: "새 터미널", tabFlow: null };
+  for (const tabId of Object.keys(views)) {
+    document.getElementById(tabId).addEventListener("click", () => {
+      for (const [t, v] of Object.entries(views)) {
+        document.getElementById(t).classList.toggle("on", t === tabId);
+        document.getElementById(v).classList.toggle("on", t === tabId);
+      }
+      const label = actions[tabId];
+      document.getElementById("actionBtn").style.display = label ? "" : "none";
+      if (label) document.getElementById("actionTxt").textContent = label;
+    });
   }
+  document.getElementById("logoutBtn").addEventListener("click",
+    () => location.href = "login.html");
 
-  // ── 사이드바 고정/미고정 ──
-  const app = document.getElementById("app");
-  const sb  = document.getElementById("sb");
-  const rail = document.getElementById("rail");
-  const pinBtn = document.getElementById("pinBtn");
+  const app = document.getElementById("app"), sb = document.getElementById("sb");
+  const rail = document.getElementById("rail"), pinBtn = document.getElementById("pinBtn");
   let pinned = true, hideTimer = null;
-
   pinBtn.addEventListener("click", () => {
     pinned = !pinned;
-    pinBtn.classList.toggle("on", pinned);
-    pinBtn.lastChild.textContent = pinned ? "고정" : "미고정";
+    document.getElementById("pinTxt").textContent = pinned ? "고정" : "미고정";
     app.classList.toggle("unpinned", !pinned);
     sb.classList.remove("open");
   });
   rail.addEventListener("mouseenter", () => { clearTimeout(hideTimer); sb.classList.add("open"); });
   sb.addEventListener("mouseenter", () => clearTimeout(hideTimer));
   sb.addEventListener("mouseleave", () => {
-    if (pinned) return;
-    hideTimer = setTimeout(() => sb.classList.remove("open"), 300);
+    if (!pinned) hideTimer = setTimeout(() => sb.classList.remove("open"), 300);
+  });
+
+  // 사이드바 폭 조절 — 실구현(sidebar.js initResize)과 동일 데모 (§12.2)
+  const sbResize = document.getElementById("sbResize");
+  let sbw = 360;
+  sbResize.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    document.body.classList.add("sb-resizing");
+    const left = sb.getBoundingClientRect().left;
+    const move = (ev) => {
+      sbw = Math.min(Math.max(ev.clientX - left, 280),
+                     Math.min(640, window.innerWidth * 0.6));
+      document.documentElement.style.setProperty("--sbw", sbw + "px");
+    };
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      document.body.classList.remove("sb-resizing");
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  });
+  sbResize.addEventListener("dblclick", () => {
+    sbw = 360;
+    document.documentElement.style.setProperty("--sbw", "360px");
+  });
+
+  // org 추가 팝오버 (§12.2) — 실구현과 동일한 열림/닫힘 데모
+  const orgPop = document.getElementById("orgPop");
+  const orgFab = document.getElementById("orgFab");
+  const orgWrap = document.getElementById("orgFabWrap");
+  orgFab.addEventListener("click", () => {
+    orgPop.hidden = !orgPop.hidden;
+    orgFab.classList.toggle("open", !orgPop.hidden);
+    if (!orgPop.hidden) document.getElementById("orgUrl").focus();
+  });
+  document.addEventListener("click", (e) => {
+    if (!orgPop.hidden && !orgWrap.contains(e.target)) {
+      orgPop.hidden = true;
+      orgFab.classList.remove("open");
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { orgPop.hidden = true; orgFab.classList.remove("open"); }
+  });
+
+  // preset [+] 이름 입력 행 — 열기 + 바깥 클릭/Esc로 접힘 (§12.2)
+  const pRow = document.getElementById("presetNewRow");
+  const pBtn = document.getElementById("presetNewBtn");
+  pBtn.addEventListener("click", () => {
+    pRow.hidden = !pRow.hidden;
+    if (!pRow.hidden) document.getElementById("presetNewName").focus();
+  });
+  document.addEventListener("click", (e) => {
+    if (!pRow.hidden && !pRow.contains(e.target) && !pBtn.contains(e.target))
+      pRow.hidden = true;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") pRow.hidden = true;
   });
 </script>
 

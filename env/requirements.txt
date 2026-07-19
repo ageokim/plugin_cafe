@@ -1,0 +1,9 @@
+# 런타임 의존성 (Architecture.md §9.2 — 하한 핀만, 상한·최신 고정 핀 금지)
+# Python ≥ 3.8 에서 해석 가능해야 한다. pip이 인터프리터에 맞는 버전을 고른다.
+flask>=3.0
+flask-sock
+requests>=2.31
+# 챗 SDK — 3.8·3.9에서는 설치를 생략하고 subprocess 폴백을 쓴다 (§12.3)
+claude-agent-sdk ; python_version >= "3.10"
+# 내장 터미널 ConPTY (§12.4)
+pywinpty ; platform_system == "Windows"

@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# pm shim (§9.3) — 자기 위치에서 ROOT를 계산해 어디서 불려도 이 checkout으로 동작.
+# PM_HOME을 자기 ROOT로 덮어써 "shim 자기위치 1순위" 규칙을 실현한다.
+SELF_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
+ROOT="$(dirname "$(dirname "$SELF_DIR")")"
+export PM_HOME="$ROOT"
+export PYTHONPATH="$ROOT/scripts${PYTHONPATH:+:$PYTHONPATH}"
+
+# 고정 인터프리터(data/env.json) 우선, 없으면 python3 (§9.1)
+PYBIN="$(sed -n 's/.*"python"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    "$ROOT/data/env.json" 2>/dev/null)"
+if [ -z "$PYBIN" ] || [ ! -x "$PYBIN" ]; then
+    PYBIN="$(command -v python3 || command -v python)"
+fi
+
+exec "$PYBIN" -m pm "$@"
